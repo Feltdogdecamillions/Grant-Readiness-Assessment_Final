@@ -1,13 +1,21 @@
-import { CheckCircle2, Target, TrendingUp } from 'lucide-react';
+import { CheckCircle2, Target, TrendingUp, Settings } from 'lucide-react';
 
 interface LandingProps {
   onStart: () => void;
+  onAdminClick: () => void;
 }
 
-export default function Landing({ onStart }: LandingProps) {
+export default function Landing({ onStart, onAdminClick }: LandingProps) {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       <div className="max-w-4xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
+        <button
+          onClick={onAdminClick}
+          className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-600 transition-colors"
+          aria-label="Admin Dashboard"
+        >
+          <Settings className="w-5 h-5" />
+        </button>
         <div className="text-center mb-12">
           <h1 className="text-4xl sm:text-5xl font-bold text-slate-900 mb-4">
             Grants Made Simple

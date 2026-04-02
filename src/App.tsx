@@ -3,9 +3,10 @@ import Landing from './components/Landing';
 import Questionnaire from './components/Questionnaire';
 import EmailCapture from './components/EmailCapture';
 import Results from './components/Results';
+import AdminDashboard from './components/AdminDashboard';
 import { supabase } from './lib/supabase';
 
-type AppState = 'landing' | 'questionnaire' | 'email' | 'results';
+type AppState = 'landing' | 'questionnaire' | 'email' | 'results' | 'admin';
 
 function App() {
   const [currentState, setCurrentState] = useState<AppState>('landing');
@@ -70,6 +71,14 @@ function App() {
     setScore(0);
   };
 
+  const handleAdminAccess = () => {
+    setCurrentState('admin');
+  };
+
+  const handleBackFromAdmin = () => {
+    setCurrentState('landing');
+  };
+
   if (configError) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center p-4">
@@ -92,7 +101,7 @@ function App() {
 
   return (
     <>
-      {currentState === 'landing' && <Landing onStart={handleStart} />}
+      {currentState === 'landing' && <Landing onStart={handleStart} onAdminClick={handleAdminAccess} />}
       {currentState === 'questionnaire' && (
         <Questionnaire onComplete={handleQuestionnaireComplete} />
       )}
@@ -107,6 +116,7 @@ function App() {
           onRestart={handleRestart}
         />
       )}
+      {currentState === 'admin' && <AdminDashboard onBack={handleBackFromAdmin} />}
     </>
   );
 }
