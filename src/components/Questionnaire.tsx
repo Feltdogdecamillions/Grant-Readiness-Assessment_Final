@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { questions } from '../data/questions';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Info } from 'lucide-react';
 
 interface QuestionnaireProps {
   onComplete: (responses: boolean[]) => void;
+  displayNote?: string | null;
 }
 
-export default function Questionnaire({ onComplete }: QuestionnaireProps) {
+export default function Questionnaire({ onComplete, displayNote }: QuestionnaireProps) {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [responses, setResponses] = useState<(boolean | null)[]>(
     new Array(questions.length).fill(null)
@@ -51,6 +52,15 @@ export default function Questionnaire({ onComplete }: QuestionnaireProps) {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 py-8">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+        {displayNote && (
+          <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div className="flex items-start gap-3">
+              <Info className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
+              <p className="text-sm text-blue-900">{displayNote}</p>
+            </div>
+          </div>
+        )}
+
         <div className="mb-6">
           <div className="flex justify-between items-center mb-2">
             <h2 className="text-2xl font-bold text-slate-900">

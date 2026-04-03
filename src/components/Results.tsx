@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { CheckCircle2, XCircle, AlertCircle, ArrowRight, RefreshCw, Download, TrendingUp, Share2, Mail, Copy, Check } from 'lucide-react';
 import { questions, categories } from '../data/questions';
 import ShareableCard from './ShareableCard';
+import { PathwayRoute } from '../utils/routingLogic';
 
 interface ResultsProps {
   score: number;
@@ -10,6 +11,7 @@ interface ResultsProps {
   organization: string;
   email: string;
   onRestart: () => void;
+  pathway?: PathwayRoute | null;
 }
 
 export default function Results({ score, responses, name, organization, email, onRestart }: ResultsProps) {

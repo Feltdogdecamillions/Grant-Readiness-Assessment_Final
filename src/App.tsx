@@ -1,15 +1,19 @@
 import { useState, useEffect } from 'react';
 import Landing from './components/Landing';
+import FundingPathwayIntake, { IntakeResponses } from './components/FundingPathwayIntake';
 import Questionnaire from './components/Questionnaire';
 import EmailCapture from './components/EmailCapture';
 import Results from './components/Results';
 import AdminDashboard from './components/AdminDashboard';
 import { supabase } from './lib/supabase';
+import { determinePathway, PathwayRoute } from './utils/routingLogic';
 
-type AppState = 'landing' | 'questionnaire' | 'email' | 'results' | 'admin';
+type AppState = 'landing' | 'intake' | 'questionnaire' | 'email' | 'results' | 'admin';
 
 function App() {
   const [currentState, setCurrentState] = useState<AppState>('landing');
+  const [intakeResponses, setIntakeResponses] = useState<IntakeResponses | null>(null);
+  const [pathway, setPathway] = useState<PathwayRoute | null>(null);
   const [responses, setResponses] = useState<boolean[]>([]);
   const [name, setName] = useState('');
   const [organization, setOrganization] = useState('');
@@ -24,7 +28,23 @@ function App() {
   }, []);
 
   const handleStart = () => {
-    setCurrentState('questionnaire');
+    setCurrentState('intake');
+  };
+
+  const handleIntakeComplete = (intake: IntakeResponses) => {
+    setIntakeResponses(intake);
+    const route = determinePathway(intake);
+    setPathway(route);
+
+    if (route.includeGrantAssessment) {
+      setCurrentState('questionnaire');
+    } else if (route.includeProcurementAssessment) {
+      setCurrentState('results');
+    }
+  };
+
+  const handleBackToLanding = () => {
+    setCurrentState('landing');
   };
 
   const handleQuestionnaireComplete = (questionnaireResponses: boolean[]) => {
@@ -49,7 +69,8 @@ function App() {
           organization: data.organization,
           email: data.email,
           responses: responses,
-          score: calculatedScore
+          score: calculatedScore,
+          intake_responses: intakeResponses
         });
 
       if (error) {
@@ -64,6 +85,8 @@ function App() {
 
   const handleRestart = () => {
     setCurrentState('landing');
+    setIntakeResponses(null);
+    setPathway(null);
     setResponses([]);
     setName('');
     setOrganization('');
@@ -102,8 +125,14 @@ function App() {
   return (
     <>
       {currentState === 'landing' && <Landing onStart={handleStart} onAdminClick={handleAdminAccess} />}
+      {currentState === 'intake' && (
+        <FundingPathwayIntake onComplete={handleIntakeComplete} onBack={handleBackToLanding} />
+      )}
       {currentState === 'questionnaire' && (
-        <Questionnaire onComplete={handleQuestionnaireComplete} />
+        <Questionnaire
+          onComplete={handleQuestionnaireComplete}
+          displayNote={pathway?.displayNote || null}
+        />
       )}
       {currentState === 'email' && <EmailCapture onSubmit={handleEmailSubmit} />}
       {currentState === 'results' && (
@@ -114,6 +143,7 @@ function App() {
           organization={organization}
           email={email}
           onRestart={handleRestart}
+          pathway={pathway}
         />
       )}
       {currentState === 'admin' && <AdminDashboard onBack={handleBackFromAdmin} />}
