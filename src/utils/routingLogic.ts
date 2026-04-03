@@ -29,7 +29,7 @@ export function determinePathway(intake: IntakeResponses): PathwayRoute {
     return {
       includeGrantAssessment: true,
       includeProcurementAssessment: false,
-      displayNote: 'Note: As a for-profit entity, you may have more limited grant opportunities. Many grants are nonprofit-specific, though some corporate and research grants may be available.',
+      displayNote: 'For-profit organizations may be eligible for certain grant opportunities, but eligibility is often more limited and may depend on industry, innovation, partnerships, or public benefit.',
     };
   }
 
@@ -37,7 +37,7 @@ export function determinePathway(intake: IntakeResponses): PathwayRoute {
     return {
       includeGrantAssessment: true,
       includeProcurementAssessment: true,
-      displayNote: 'Note: You will complete both the grant readiness and procurement assessments.',
+      displayNote: 'For-profit organizations may be eligible for certain grant opportunities, but eligibility is often more limited and may depend on industry, innovation, partnerships, or public benefit.',
     };
   }
 

@@ -8,6 +8,7 @@ interface QuestionnaireProps {
 }
 
 export default function Questionnaire({ onComplete, displayNote }: QuestionnaireProps) {
+  const [showIntro, setShowIntro] = useState(true);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [responses, setResponses] = useState<(boolean | null)[]>(
     new Array(questions.length).fill(null)
@@ -49,22 +50,72 @@ export default function Questionnaire({ onComplete, displayNote }: Questionnaire
   const allAnswered = responses.every(r => r !== null);
   const currentQuestionData = questions[currentQuestion];
 
+  if (showIntro) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center py-8 px-4">
+        <div className="max-w-2xl w-full">
+          <div className="bg-white rounded-2xl shadow-xl p-8 md:p-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-6">
+              Let's Assess Your Funding Readiness
+            </h2>
+
+            <p className="text-lg text-slate-700 leading-relaxed mb-6">
+              This assessment will evaluate your organization's readiness to pursue grants, government contracts (procurement), or both.
+            </p>
+
+            <p className="text-base text-slate-700 leading-relaxed mb-8">
+              You'll answer a series of questions about your structure, financial systems, documentation, and overall preparedness. Based on your responses, you'll receive a personalized readiness score along with clear recommendations on what to improve and where to focus.
+            </p>
+
+            <div className="bg-slate-50 rounded-xl p-6 mb-8">
+              <h3 className="font-semibold text-slate-900 mb-3">What to Expect:</h3>
+              <ul className="space-y-2 text-slate-700">
+                <li className="flex items-start">
+                  <span className="text-emerald-600 mr-2 mt-1">•</span>
+                  <span>Takes approximately 5–10 minutes to complete</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="text-emerald-600 mr-2 mt-1">•</span>
+                  <span>Questions will adapt based on your organization type and funding goals</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="text-emerald-600 mr-2 mt-1">•</span>
+                  <span>You'll receive a readiness score and tailored next steps at the end</span>
+                </li>
+              </ul>
+            </div>
+
+            {displayNote && (
+              <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div className="flex items-start gap-3">
+                  <Info className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                  <p className="text-sm text-blue-900">{displayNote}</p>
+                </div>
+              </div>
+            )}
+
+            <div className="text-center">
+              <button
+                onClick={() => setShowIntro(false)}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-8 py-4 rounded-lg text-lg transition-colors duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+              >
+                Begin Assessment
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 py-8">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-        {displayNote && (
-          <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <div className="flex items-start gap-3">
-              <Info className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
-              <p className="text-sm text-blue-900">{displayNote}</p>
-            </div>
-          </div>
-        )}
 
         <div className="mb-6">
           <div className="flex justify-between items-center mb-2">
             <h2 className="text-2xl font-bold text-slate-900">
-              Grant Readiness Assessment
+              Funding Readiness Assessment
             </h2>
             <span className="text-sm font-medium text-slate-600">
               {answeredCount} of {questions.length} answered
