@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { CheckCircle2, XCircle, AlertCircle, ArrowRight, RefreshCw, Download, TrendingUp, Share2, Mail, Copy, Check } from 'lucide-react';
 import { questions, categories } from '../data/questions';
-import { procurementQuestions, procurementCategories } from '../data/procurementQuestions';
+import { procurementQuestions, procurementCategories, categoryWeights } from '../data/procurementQuestions';
 import ShareableCard from './ShareableCard';
 import ProcurementResults from './ProcurementResults';
 import { PathwayRoute } from '../utils/routingLogic';
@@ -111,34 +111,45 @@ export default function Results({ score, responses, procurementScore, procuremen
   };
 
   const getProcurementScoreLevel = (score: number) => {
-    if (score >= 75) return { level: 'Procurement Ready', color: 'emerald', description: 'Your business is well-positioned to pursue government contracts' };
-    if (score >= 50) return { level: 'Developing', color: 'amber', description: 'Your business has a foundation but needs to strengthen key areas' };
-    return { level: 'Getting Started', color: 'blue', description: 'Build your foundation before actively pursuing contracts' };
+    if (score >= 80) return { level: 'Procurement Ready', color: 'emerald', description: 'Your business is well-positioned to pursue government contracts' };
+    if (score >= 60) return { level: 'Emerging/Competitive', color: 'blue', description: 'Your business is competitive but should strengthen key areas' };
+    if (score >= 40) return { level: 'Early Stage', color: 'amber', description: 'Your business has started but needs significant development' };
+    return { level: 'Not Procurement Ready', color: 'red', description: 'Build your foundation before actively pursuing contracts' };
   };
 
   const getProcurementCategoryScores = () => {
     const categoryData: { [key: string]: { points: number; total: number } } = {};
 
     procurementCategories.forEach(cat => {
-      categoryData[cat] = { points: 0, total: 0 };
+      categoryData[cat] = { points: 0, total: categoryWeights[cat] };
     });
 
     procurementQuestions.forEach((q, index) => {
       const response = procurementResponses[index];
-      categoryData[q.category].total += 3;
+      const category = q.category;
+      const questionsInCategory = procurementQuestions.filter(question => question.category === category).length;
+      const pointsPerQuestion = categoryWeights[category] / questionsInCategory;
 
       if (index === 16) {
-        if (response !== 'None') categoryData[q.category].points += 3;
-      } else if (response === 'Yes' || response === 'Yes, active' || (response === 'No' && index === 23)) {
-        categoryData[q.category].points += 3;
-      } else if (response === 'Partially' || response === 'Somewhat' || response === 'Registered, but unsure if active') {
-        categoryData[q.category].points += 1.5;
+        if (response !== 'None') {
+          categoryData[category].points += pointsPerQuestion;
+        }
+      } else if (index === 23) {
+        if (response === 'No') {
+          categoryData[category].points += pointsPerQuestion;
+        } else if (response === 'Not sure') {
+          categoryData[category].points += pointsPerQuestion / 2;
+        }
+      } else if (response === 'Yes' || response === 'Yes, active') {
+        categoryData[category].points += pointsPerQuestion;
+      } else if (response === 'Partially' || response === 'Somewhat' || response === 'Not sure' || response === 'Registered, but unsure if active') {
+        categoryData[category].points += pointsPerQuestion / 2;
       }
     });
 
     return Object.entries(categoryData).map(([category, data]) => ({
       category,
-      points: Math.round(data.points),
+      points: Math.round(data.points * 10) / 10,
       maxPoints: data.total
     }));
   };

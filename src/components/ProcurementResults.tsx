@@ -54,7 +54,11 @@ export default function ProcurementResults({
                   cx="112"
                   cy="112"
                   r="100"
-                  stroke={`${scoreLevel.color === 'emerald' ? '#10b981' : scoreLevel.color === 'amber' ? '#f59e0b' : '#3b82f6'}`}
+                  stroke={`${
+                    scoreLevel.color === 'emerald' ? '#10b981' :
+                    scoreLevel.color === 'blue' ? '#3b82f6' :
+                    scoreLevel.color === 'amber' ? '#f59e0b' : '#ef4444'
+                  }`}
                   strokeWidth="16"
                   fill="none"
                   strokeDasharray={`${2 * Math.PI * 100}`}
@@ -70,7 +74,11 @@ export default function ProcurementResults({
                 </div>
               </div>
             </div>
-            <h3 className={`text-3xl font-bold mb-2 ${scoreLevel.color === 'emerald' ? 'text-emerald-600' : scoreLevel.color === 'amber' ? 'text-amber-600' : 'text-blue-600'}`}>
+            <h3 className={`text-3xl font-bold mb-2 ${
+              scoreLevel.color === 'emerald' ? 'text-emerald-600' :
+              scoreLevel.color === 'blue' ? 'text-blue-600' :
+              scoreLevel.color === 'amber' ? 'text-amber-600' : 'text-red-600'
+            }`}>
               {scoreLevel.level}
             </h3>
             <p className="text-slate-600 max-w-md mx-auto">
@@ -99,44 +107,55 @@ export default function ProcurementResults({
         </div>
 
         <div className={`mt-6 p-6 rounded-xl border-2 ${
-          score >= 75 ? 'bg-emerald-50 border-emerald-200' :
-          score >= 50 ? 'bg-amber-50 border-amber-200' :
-          'bg-blue-50 border-blue-200'
+          score >= 80 ? 'bg-emerald-50 border-emerald-200' :
+          score >= 60 ? 'bg-blue-50 border-blue-200' :
+          score >= 40 ? 'bg-amber-50 border-amber-200' :
+          'bg-red-50 border-red-200'
         }`}>
           <h4 className="font-bold text-slate-900 text-lg mb-3 flex items-center gap-2">
             <AlertCircle className={`w-5 h-5 ${
-              score >= 75 ? 'text-emerald-600' :
-              score >= 50 ? 'text-amber-600' :
-              'text-blue-600'
+              score >= 80 ? 'text-emerald-600' :
+              score >= 60 ? 'text-blue-600' :
+              score >= 40 ? 'text-amber-600' :
+              'text-red-600'
             }`} />
             Understanding Your Score
           </h4>
           <div className="space-y-3 text-slate-700">
-            {score >= 75 ? (
+            {score >= 80 ? (
               <>
                 <p className="font-semibold text-emerald-800">
-                  75–100: Your business appears procurement ready and positioned to compete for government contracts.
+                  80–100: Procurement Ready
                 </p>
                 <p className="text-sm leading-relaxed">
-                  Businesses in this range typically have proper registration, documentation, past performance, and operational capacity. You can actively pursue opportunities that match your capabilities and certifications.
+                  Your business has strong foundational infrastructure, proper registration, comprehensive documentation, and operational capacity. You can actively pursue government contract opportunities that match your capabilities and certifications.
                 </p>
               </>
-            ) : score >= 50 ? (
+            ) : score >= 60 ? (
               <>
-                <p className="font-semibold text-amber-800">
-                  50–74: Your business has foundational elements but should strengthen key systems before aggressively pursuing contracts.
+                <p className="font-semibold text-blue-800">
+                  60–79: Emerging/Competitive
                 </p>
                 <p className="text-sm leading-relaxed">
-                  Businesses in this range have made progress but have gaps to address. Focus on completing SAM.gov registration, building documentation, and improving your capability statement. Consider starting with subcontracting opportunities while building capacity.
+                  Your business is competitive but should strengthen key areas before aggressively pursuing large contracts. Focus on completing any missing SAM.gov elements, refining your capability statement, and building documentation. Consider subcontracting opportunities while addressing gaps.
+                </p>
+              </>
+            ) : score >= 40 ? (
+              <>
+                <p className="font-semibold text-amber-800">
+                  40–59: Early Stage
+                </p>
+                <p className="text-sm leading-relaxed">
+                  Your business has made initial progress but needs significant development before pursuing competitive contracts. Prioritize SAM.gov registration completion, developing a professional capability statement, and building past performance through smaller opportunities or subcontracts.
                 </p>
               </>
             ) : (
               <>
-                <p className="font-semibold text-blue-800">
-                  0–49: Your business is in the early stages and should build foundation before pursuing competitive contracts.
+                <p className="font-semibold text-red-800">
+                  0–39: Not Procurement Ready
                 </p>
                 <p className="text-sm leading-relaxed">
-                  Businesses in this range need to establish core infrastructure including registration, documentation, and operational systems. This is normal for newer businesses. Focus on SAM.gov registration, capability statement development, and building past performance through smaller opportunities.
+                  Your business needs to establish core infrastructure before pursuing government contracts. Focus first on business registration, SAM.gov setup, financial readiness, and basic documentation. This is a normal starting point for businesses new to procurement.
                 </p>
               </>
             )}

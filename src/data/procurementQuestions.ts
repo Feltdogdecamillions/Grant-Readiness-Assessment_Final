@@ -18,6 +18,19 @@ export const procurementCategories = [
   'Pipeline Strategy'
 ];
 
+export const categoryWeights: { [key: string]: number } = {
+  'Business Foundation': 10,
+  'SAM.gov Registration': 15,
+  'NAICS Codes': 10,
+  'Capability Statement': 10,
+  'Past Performance': 10,
+  'Certifications': 10,
+  'Financial Readiness': 10,
+  'Compliance & Risk': 10,
+  'Bid Readiness': 10,
+  'Pipeline Strategy': 5
+};
+
 export const procurementQuestions: ProcurementQuestion[] = [
   {
     id: 'business_registered',

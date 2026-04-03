@@ -8,6 +8,7 @@ import Results from './components/Results';
 import AdminDashboard from './components/AdminDashboard';
 import { supabase } from './lib/supabase';
 import { determinePathway, PathwayRoute } from './utils/routingLogic';
+import { procurementQuestions, categoryWeights } from './data/procurementQuestions';
 
 type AppState = 'landing' | 'intake' | 'questionnaire' | 'procurement' | 'email' | 'results' | 'admin';
 
@@ -104,20 +105,39 @@ function App() {
   const calculateProcurementScore = (responses: string[]): number => {
     if (responses.length === 0) return 0;
 
-    let score = 0;
-    const totalQuestions = responses.length;
+    const categoryScores: { [key: string]: { earned: number; possible: number } } = {};
 
-    responses.forEach((response, index) => {
+    Object.keys(categoryWeights).forEach(cat => {
+      categoryScores[cat] = { earned: 0, possible: 0 };
+    });
+
+    procurementQuestions.forEach((question, index) => {
+      const response = responses[index];
+      const category = question.category;
+      const questionsInCategory = procurementQuestions.filter(q => q.category === category).length;
+      const pointsPerQuestion = categoryWeights[category] / questionsInCategory;
+
+      categoryScores[category].possible += pointsPerQuestion;
+
       if (index === 16) {
-        if (response !== 'None') score += 3;
-      } else if (response === 'Yes' || response === 'Yes, active' || response === 'No' && index === 23) {
-        score += 3;
-      } else if (response === 'Partially' || response === 'Somewhat' || response === 'Registered, but unsure if active') {
-        score += 1.5;
+        if (response !== 'None') {
+          categoryScores[category].earned += pointsPerQuestion;
+        }
+      } else if (index === 23) {
+        if (response === 'No') {
+          categoryScores[category].earned += pointsPerQuestion;
+        } else if (response === 'Not sure') {
+          categoryScores[category].earned += pointsPerQuestion / 2;
+        }
+      } else if (response === 'Yes' || response === 'Yes, active') {
+        categoryScores[category].earned += pointsPerQuestion;
+      } else if (response === 'Partially' || response === 'Somewhat' || response === 'Not sure' || response === 'Registered, but unsure if active') {
+        categoryScores[category].earned += pointsPerQuestion / 2;
       }
     });
 
-    return Math.round((score / (totalQuestions * 3)) * 100);
+    const totalEarned = Object.values(categoryScores).reduce((sum, cat) => sum + cat.earned, 0);
+    return Math.round(totalEarned);
   };
 
   const handleRestart = () => {
