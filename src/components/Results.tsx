@@ -30,9 +30,9 @@ export default function Results({ score, responses, procurementScore, procuremen
   const isForProfit = intakeResponses?.organizationType === 'For-profit';
   const fundingType = intakeResponses?.fundingType || '';
   const getScoreLevel = (score: number) => {
-    if (score >= 71) return { level: 'Grant Ready', color: 'emerald', description: 'Your organization is well-prepared for grant applications' };
-    if (score >= 41) return { level: 'Partially Ready', color: 'amber', description: 'Your organization has a foundation but needs to strengthen several areas before pursuing grants' };
-    return { level: 'Not Grant Ready', color: 'red', description: 'Significant preparation is needed before grant applications' };
+    if (score >= 71) return { level: 'Grant Ready', color: 'emerald', description: 'Your organization appears grant ready and may be well positioned to compete for funding' };
+    if (score >= 41) return { level: 'Emerging / Competitive', color: 'amber', description: 'Your organization shows progress, but several readiness gaps still need attention' };
+    return { level: 'Not Grant Ready', color: 'red', description: 'You should focus on foundational setup before pursuing funding aggressively' };
   };
 
   const getCategoryScores = () => {
@@ -85,6 +85,22 @@ export default function Results({ score, responses, procurementScore, procuremen
 
     const weakCategories = categoryScores.filter(cat => cat.score < 16).sort((a, b) => a.score - b.score);
 
+    if (score >= 71) {
+      recommendations.push('You appear funding-ready in several areas and should begin focusing on targeted opportunities and submission strategy.');
+      recommendations.push('Consider starting with local foundation grants that align with your mission.');
+      recommendations.push('Develop a calendar of grant deadlines and application requirements.');
+    } else if (score >= 41) {
+      recommendations.push('Your organization shows progress, but several readiness gaps still need attention.');
+      recommendations.push('Focus on strengthening your weakest areas before submitting major grant applications.');
+      recommendations.push('Consider hiring a grant consultant to review your organizational readiness.');
+      recommendations.push('Start with smaller capacity-building grants while you address gaps.');
+    } else {
+      recommendations.push('You should focus on foundational setup before pursuing funding aggressively.');
+      recommendations.push('Work with a nonprofit consultant to develop a 6-12 month readiness plan.');
+      recommendations.push('Prioritize building foundational capacity before pursuing major grants.');
+      recommendations.push('Focus first on establishing basic organizational infrastructure and documentation.');
+    }
+
     if (weakCategories.length > 0) {
       weakCategories.forEach(cat => {
         if (cat.category === 'Organizational Foundations') {
@@ -99,20 +115,6 @@ export default function Results({ score, responses, procurementScore, procuremen
           recommendations.push('Establish grant management systems including dedicated staff, tracking calendars, budget monitoring, and compliance documentation.');
         }
       });
-    }
-
-    if (score >= 71) {
-      recommendations.push('Your organization is ready to begin pursuing grant opportunities.');
-      recommendations.push('Consider starting with local foundation grants that align with your mission.');
-      recommendations.push('Develop a calendar of grant deadlines and application requirements.');
-    } else if (score >= 41) {
-      recommendations.push('Focus on strengthening your weakest areas before submitting major grant applications.');
-      recommendations.push('Consider hiring a grant consultant to review your organizational readiness.');
-      recommendations.push('Start with smaller capacity-building grants while you address gaps.');
-    } else {
-      recommendations.push('Work with a nonprofit consultant to develop a 6-12 month readiness plan.');
-      recommendations.push('Prioritize building foundational capacity before pursuing major grants.');
-      recommendations.push('Focus first on establishing basic organizational infrastructure and documentation.');
     }
 
     return recommendations;
@@ -193,28 +195,24 @@ export default function Results({ score, responses, procurementScore, procuremen
       .sort((a, b) => (a.points / a.maxPoints) - (b.points / b.maxPoints));
 
     if (procurementScore >= 80) {
-      recommendations.push('You appear procurement-ready and should begin targeting specific agency opportunities and strengthening your pipeline strategy.');
+      recommendations.push('You appear procurement-ready and should begin targeting agencies, primes, or contract opportunities aligned with your services.');
       recommendations.push('Focus on identifying contract opportunities that align with your NAICS codes and capabilities.');
       recommendations.push('Build relationships with contracting officers and attend agency outreach events.');
       recommendations.push('Continue monitoring SAM.gov for relevant solicitations and maintain your registrations.');
     } else if (procurementScore >= 60) {
-      const gaps = [];
-      if (weakCategories.some(c => c.category === 'SAM.gov Registration')) gaps.push('SAM registration');
-      if (weakCategories.some(c => c.category === 'Capability Statement')) gaps.push('capability statement development');
-      if (weakCategories.some(c => c.category === 'Bid Readiness')) gaps.push('bid systems');
-
-      const gapText = gaps.length > 0 ? `, but key gaps remain in ${gaps.join(', ')}.` : '.';
-      recommendations.push(`You are moderately prepared for procurement opportunities${gapText}`);
+      recommendations.push('You appear moderately prepared and should strengthen the areas below to improve competitiveness.');
       recommendations.push('Prioritize completing your SAM.gov registration and ensuring all certifications are current.');
       recommendations.push('Develop or refine your capability statement to showcase your strengths and past performance.');
       recommendations.push('Consider starting with subcontracting opportunities while strengthening your foundation.');
     } else if (procurementScore >= 40) {
-      recommendations.push('You should focus on foundational procurement setup before actively bidding on contracts.');
+      recommendations.push('Your organization shows progress, but several readiness gaps still need attention.');
+      recommendations.push('Strengthen your SAM.gov registration, capability statement, and bid response process before pursuing contracts.');
       recommendations.push('Complete SAM.gov registration as your first priority, as this is required for federal contracts.');
       recommendations.push('Work on developing a professional capability statement that highlights your business strengths.');
       recommendations.push('Build past performance through smaller contracts or subcontracting relationships.');
     } else {
-      recommendations.push('You should focus on foundational procurement setup before bidding.');
+      recommendations.push('You should focus on foundational setup before pursuing funding aggressively.');
+      recommendations.push('Focus on identifying NAICS codes, documenting past performance, and building a repeatable pipeline strategy.');
       recommendations.push('Start with business registration, obtaining an EIN, and setting up a separate business bank account.');
       recommendations.push('Register in SAM.gov and ensure all business information is accurate and current.');
       recommendations.push('Consider working with a PTAC (Procurement Technical Assistance Center) for guidance on getting started.');
@@ -430,28 +428,106 @@ Generated by Grants Made Simple Grant Readiness Assessment Tool
   const procurementTopGaps = hasProcurementAssessment ? getProcurementTopGaps() : [];
   const suggestedFundingPath = hasProcurementAssessment ? getSuggestedFundingPath() : '';
 
-  const getAssessmentTitle = () => {
-    if (hasGrantAssessment && hasProcurementAssessment) return 'Grant & Procurement Readiness Results';
-    if (hasProcurementAssessment) return 'Procurement Readiness Assessment Results';
-    return 'Grant Readiness Assessment Results';
+  const getPrimaryFocus = () => {
+    if (!hasGrantAssessment || !hasProcurementAssessment) return null;
+
+    const grantGaps = improvements.length;
+    const procurementGaps = procurementImprovements.length;
+
+    if (score > procurementScore + 10) {
+      return {
+        recommendation: 'Focus on Grant Readiness First',
+        reason: 'Your grant readiness foundation is stronger. Build on this momentum while addressing procurement gaps in parallel.'
+      };
+    } else if (procurementScore > score + 10) {
+      return {
+        recommendation: 'Focus on Procurement Readiness First',
+        reason: 'Your procurement readiness is ahead. Capitalize on this strength while developing grant capabilities.'
+      };
+    } else if (grantGaps < procurementGaps) {
+      return {
+        recommendation: 'Focus on Grant Readiness First',
+        reason: 'You have fewer critical gaps in grant readiness. Completing these improvements could position you for funding opportunities sooner.'
+      };
+    } else if (procurementGaps < grantGaps) {
+      return {
+        recommendation: 'Focus on Procurement Readiness First',
+        reason: 'You have fewer critical gaps in procurement readiness. Addressing these could open contract opportunities faster.'
+      };
+    } else {
+      return {
+        recommendation: 'Pursue Both Paths Strategically',
+        reason: 'Your readiness levels are similar across both pathways. Consider pursuing opportunities in both areas while systematically addressing gaps.'
+      };
+    }
   };
+
+  const primaryFocus = getPrimaryFocus();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 py-8">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-8">
-          <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-2">
-            {getAssessmentTitle()}
+          <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-4">
+            Your Funding Readiness Results
           </h1>
-          <p className="text-slate-600 text-lg">{name} • {organization}</p>
+          <p className="text-slate-600 text-lg mb-4">{name} • {organization}</p>
+          <p className="text-slate-700 max-w-3xl mx-auto leading-relaxed">
+            Based on your responses, this assessment evaluated your organization's readiness to pursue grants, government contracts (procurement), or both. Your results highlight your current strengths, gaps, and the next steps that can help you become more competitive for funding opportunities.
+          </p>
         </div>
+
+        {isForProfit && (fundingType === 'Grants' || fundingType === 'Both') && (
+          <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-6 mb-6">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="w-6 h-6 text-blue-600 flex-shrink-0 mt-0.5" />
+              <div>
+                <h4 className="font-semibold text-blue-900 mb-2">Note for For-Profit Organizations</h4>
+                <p className="text-blue-800 text-sm leading-relaxed">
+                  For-profit organizations may be eligible for certain grant opportunities, but eligibility is often narrower and may depend on industry, innovation, partnerships, public benefit, or specific grant requirements.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {hasGrantAssessment && hasProcurementAssessment && (
+          <div className="bg-white rounded-2xl shadow-xl p-8 mb-6">
+            <h3 className="text-2xl font-bold text-slate-900 mb-6 flex items-center gap-2">
+              <TrendingUp className="w-7 h-7 text-emerald-600" />
+              Combined Funding Readiness Summary
+            </h3>
+            <div className="grid md:grid-cols-2 gap-6 mb-6">
+              <div className="bg-emerald-50 border-2 border-emerald-200 rounded-xl p-6">
+                <h4 className="font-semibold text-slate-900 mb-2">Grant Readiness</h4>
+                <p className="text-4xl font-bold text-emerald-700 mb-2">{score}/100</p>
+                <p className="text-sm text-slate-700">{scoreLevel?.level}</p>
+              </div>
+              <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-6">
+                <h4 className="font-semibold text-slate-900 mb-2">Procurement Readiness</h4>
+                <p className="text-4xl font-bold text-blue-700 mb-2">{procurementScore}/100</p>
+                <p className="text-sm text-slate-700">{procurementScoreLevel?.level}</p>
+              </div>
+            </div>
+            {primaryFocus && (
+              <div className="bg-gradient-to-r from-emerald-50 to-blue-50 border-2 border-emerald-200 rounded-xl p-6">
+                <h4 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
+                  <ArrowRight className="w-5 h-5 text-emerald-600" />
+                  Suggested Primary Focus
+                </h4>
+                <p className="text-lg font-bold text-emerald-700 mb-2">{primaryFocus.recommendation}</p>
+                <p className="text-slate-700 leading-relaxed">{primaryFocus.reason}</p>
+              </div>
+            )}
+          </div>
+        )}
 
         {hasGrantAssessment && scoreLevel && (
         <>
         <div className="bg-white rounded-2xl shadow-xl p-8 mb-6">
           <div className="flex justify-between items-start mb-6">
             <div>
-              <h2 className="text-2xl font-bold text-slate-900 mb-2">Your Grant Readiness Score</h2>
+              <h2 className="text-2xl font-bold text-slate-900 mb-2">Grant Readiness Score</h2>
               <p className="text-slate-600">Assessment completed on {new Date().toLocaleDateString()}</p>
             </div>
             <button
@@ -699,7 +775,7 @@ Generated by Grants Made Simple Grant Readiness Assessment Tool
           <div className="bg-white rounded-2xl shadow-xl p-8 mb-6">
             <h3 className="text-2xl font-bold text-slate-900 mb-6 flex items-center gap-2">
               <CheckCircle2 className="w-7 h-7 text-emerald-600" />
-              Your Strengths ({strengths.length})
+              Key Strengths ({strengths.length})
             </h3>
             <div className="grid md:grid-cols-2 gap-4">
               {strengths.map((strength, index) => (
@@ -716,7 +792,7 @@ Generated by Grants Made Simple Grant Readiness Assessment Tool
           <div className="bg-white rounded-2xl shadow-xl p-8 mb-6">
             <h3 className="text-2xl font-bold text-slate-900 mb-6 flex items-center gap-2">
               <AlertCircle className="w-7 h-7 text-amber-600" />
-              Improvement Checklist ({improvements.length} items)
+              Key Gaps ({improvements.length} items)
             </h3>
             <div className="space-y-3">
               {improvements.map((item, index) => (
@@ -805,24 +881,10 @@ Generated by Grants Made Simple Grant Readiness Assessment Tool
 
         {hasProcurementAssessment && procurementScoreLevel && (
           <>
-            {isForProfit && (fundingType === 'Grants' || fundingType === 'Both') && (
-              <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-6 mb-6">
-                <div className="flex items-start gap-3">
-                  <AlertCircle className="w-6 h-6 text-blue-600 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <h4 className="font-semibold text-blue-900 mb-2">Note for For-Profit Entities</h4>
-                    <p className="text-blue-800 text-sm leading-relaxed">
-                      For-profit entities may be eligible for some grant opportunities, but eligibility is often narrower and may depend on industry, public benefit, innovation, partnerships, or specific grant guidelines.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-
             <div className="bg-white rounded-2xl shadow-xl p-8 mb-6">
               <div className="flex justify-between items-start mb-6">
                 <div>
-                  <h2 className="text-2xl font-bold text-slate-900 mb-2">Your Procurement Readiness Score</h2>
+                  <h2 className="text-2xl font-bold text-slate-900 mb-2">Procurement Readiness Score</h2>
                   <p className="text-slate-600">Assessment completed on {new Date().toLocaleDateString()}</p>
                 </div>
               </div>
@@ -957,7 +1019,7 @@ Generated by Grants Made Simple Grant Readiness Assessment Tool
                 <div className="bg-white rounded-2xl shadow-xl p-8">
                   <h3 className="text-2xl font-bold text-slate-900 mb-6 flex items-center gap-2">
                     <CheckCircle2 className="w-7 h-7 text-emerald-600" />
-                    Top Strengths
+                    Key Strengths
                   </h3>
                   <div className="space-y-3">
                     {procurementTopStrengths.map((strength, index) => (
@@ -974,7 +1036,7 @@ Generated by Grants Made Simple Grant Readiness Assessment Tool
                 <div className="bg-white rounded-2xl shadow-xl p-8">
                   <h3 className="text-2xl font-bold text-slate-900 mb-6 flex items-center gap-2">
                     <AlertCircle className="w-7 h-7 text-amber-600" />
-                    Top Gaps
+                    Key Gaps
                   </h3>
                   <div className="space-y-3">
                     {procurementTopGaps.map((gap, index) => (
@@ -1004,16 +1066,6 @@ Generated by Grants Made Simple Grant Readiness Assessment Tool
                     <p className="text-slate-700 flex-1 pt-1">{rec}</p>
                   </div>
                 ))}
-              </div>
-            </div>
-
-            <div className="bg-white rounded-2xl shadow-xl p-8 mb-6">
-              <h3 className="text-2xl font-bold text-slate-900 mb-4 flex items-center gap-2">
-                <TrendingUp className="w-7 h-7 text-emerald-600" />
-                Suggested Funding Path
-              </h3>
-              <div className="bg-gradient-to-r from-emerald-50 to-blue-50 border-2 border-emerald-200 rounded-xl p-6">
-                <p className="text-lg font-semibold text-slate-900">{suggestedFundingPath}</p>
               </div>
             </div>
 
