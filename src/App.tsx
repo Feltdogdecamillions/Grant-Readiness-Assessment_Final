@@ -2,23 +2,26 @@ import { useState, useEffect } from 'react';
 import Landing from './components/Landing';
 import FundingPathwayIntake, { IntakeResponses } from './components/FundingPathwayIntake';
 import Questionnaire from './components/Questionnaire';
+import ProcurementQuestionnaire from './components/ProcurementQuestionnaire';
 import EmailCapture from './components/EmailCapture';
 import Results from './components/Results';
 import AdminDashboard from './components/AdminDashboard';
 import { supabase } from './lib/supabase';
 import { determinePathway, PathwayRoute } from './utils/routingLogic';
 
-type AppState = 'landing' | 'intake' | 'questionnaire' | 'email' | 'results' | 'admin';
+type AppState = 'landing' | 'intake' | 'questionnaire' | 'procurement' | 'email' | 'results' | 'admin';
 
 function App() {
   const [currentState, setCurrentState] = useState<AppState>('landing');
   const [intakeResponses, setIntakeResponses] = useState<IntakeResponses | null>(null);
   const [pathway, setPathway] = useState<PathwayRoute | null>(null);
   const [responses, setResponses] = useState<boolean[]>([]);
+  const [procurementResponses, setProcurementResponses] = useState<string[]>([]);
   const [name, setName] = useState('');
   const [organization, setOrganization] = useState('');
   const [email, setEmail] = useState('');
   const [score, setScore] = useState(0);
+  const [procurementScore, setProcurementScore] = useState(0);
   const [configError, setConfigError] = useState(false);
 
   useEffect(() => {
@@ -39,7 +42,7 @@ function App() {
     if (route.includeGrantAssessment) {
       setCurrentState('questionnaire');
     } else if (route.includeProcurementAssessment) {
-      setCurrentState('results');
+      setCurrentState('procurement');
     }
   };
 
@@ -49,6 +52,16 @@ function App() {
 
   const handleQuestionnaireComplete = (questionnaireResponses: boolean[]) => {
     setResponses(questionnaireResponses);
+
+    if (pathway?.includeProcurementAssessment) {
+      setCurrentState('procurement');
+    } else {
+      setCurrentState('email');
+    }
+  };
+
+  const handleProcurementComplete = (procurementResponses: string[]) => {
+    setProcurementResponses(procurementResponses);
     setCurrentState('email');
   };
 
@@ -61,6 +74,9 @@ function App() {
     const calculatedScore = yesCount * 4;
     setScore(calculatedScore);
 
+    const calculatedProcurementScore = calculateProcurementScore(procurementResponses);
+    setProcurementScore(calculatedProcurementScore);
+
     try {
       const { error } = await supabase
         .from('assessments')
@@ -68,9 +84,11 @@ function App() {
           name: data.name,
           organization: data.organization,
           email: data.email,
-          responses: responses,
+          responses: responses.length > 0 ? responses : null,
           score: calculatedScore,
-          intake_responses: intakeResponses
+          intake_responses: intakeResponses,
+          procurement_responses: procurementResponses.length > 0 ? procurementResponses : null,
+          procurement_score: calculatedProcurementScore
         });
 
       if (error) {
@@ -83,15 +101,36 @@ function App() {
     setCurrentState('results');
   };
 
+  const calculateProcurementScore = (responses: string[]): number => {
+    if (responses.length === 0) return 0;
+
+    let score = 0;
+    const totalQuestions = responses.length;
+
+    responses.forEach((response, index) => {
+      if (index === 16) {
+        if (response !== 'None') score += 3;
+      } else if (response === 'Yes' || response === 'Yes, active' || response === 'No' && index === 23) {
+        score += 3;
+      } else if (response === 'Partially' || response === 'Somewhat' || response === 'Registered, but unsure if active') {
+        score += 1.5;
+      }
+    });
+
+    return Math.round((score / (totalQuestions * 3)) * 100);
+  };
+
   const handleRestart = () => {
     setCurrentState('landing');
     setIntakeResponses(null);
     setPathway(null);
     setResponses([]);
+    setProcurementResponses([]);
     setName('');
     setOrganization('');
     setEmail('');
     setScore(0);
+    setProcurementScore(0);
   };
 
   const handleAdminAccess = () => {
@@ -134,11 +173,19 @@ function App() {
           displayNote={pathway?.displayNote || null}
         />
       )}
+      {currentState === 'procurement' && (
+        <ProcurementQuestionnaire
+          onComplete={handleProcurementComplete}
+          displayNote={pathway?.displayNote || null}
+        />
+      )}
       {currentState === 'email' && <EmailCapture onSubmit={handleEmailSubmit} />}
       {currentState === 'results' && (
         <Results
           score={score}
           responses={responses}
+          procurementScore={procurementScore}
+          procurementResponses={procurementResponses}
           name={name}
           organization={organization}
           email={email}
