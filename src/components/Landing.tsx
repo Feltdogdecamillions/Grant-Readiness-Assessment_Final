@@ -25,7 +25,7 @@ export default function Landing({ onStart, onAdminClick }: LandingProps) {
           </h2>
           <p className="text-lg text-slate-600 max-w-2xl mx-auto leading-relaxed">
             Discover whether your organization is prepared to pursue grants, government contracts, or both.
-            This assessment helps you evaluate your systems, structure, documentation, and readiness to compete for funding opportunities.
+            This assessment evaluates your capacity, financial readiness, documentation, systems, and overall preparedness for external funding.
           </p>
         </div>
 
@@ -42,7 +42,7 @@ export default function Landing({ onStart, onAdminClick }: LandingProps) {
                 Your Readiness Score
               </h4>
               <p className="text-slate-600 text-sm">
-                See how prepared your organization is based on key funding-readiness criteria.
+                Receive a clear score based on key criteria tied to your funding path.
               </p>
             </div>
 
@@ -54,7 +54,7 @@ export default function Landing({ onStart, onAdminClick }: LandingProps) {
                 Strengths & Gaps
               </h4>
               <p className="text-slate-600 text-sm">
-                Understand where you are strong and where you need to improve.
+                Identify what your organization is doing well and where improvement is needed.
               </p>
             </div>
 
@@ -66,7 +66,7 @@ export default function Landing({ onStart, onAdminClick }: LandingProps) {
                 Next Steps
               </h4>
               <p className="text-slate-600 text-sm">
-                Get tailored action steps to move closer to funding readiness.
+                Get practical recommendations to improve your readiness.
               </p>
             </div>
           </div>
