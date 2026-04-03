@@ -21,12 +21,11 @@ export default function Landing({ onStart, onAdminClick }: LandingProps) {
             Grants Made Simple
           </h1>
           <h2 className="text-2xl sm:text-3xl font-semibold text-slate-700 mb-6">
-            Grant Readiness Assessment
+            Funding Readiness Assessment
           </h2>
           <p className="text-lg text-slate-600 max-w-2xl mx-auto leading-relaxed">
-            Discover if your nonprofit organization is ready to pursue grant funding.
-            This comprehensive assessment evaluates your organizational capacity,
-            financial systems, and program development.
+            Discover whether your organization is prepared to pursue grants, government contracts, or both.
+            This assessment helps you evaluate your systems, structure, documentation, and readiness to compete for funding opportunities.
           </p>
         </div>
 
@@ -43,7 +42,7 @@ export default function Landing({ onStart, onAdminClick }: LandingProps) {
                 Your Readiness Score
               </h4>
               <p className="text-slate-600 text-sm">
-                Get a comprehensive score from 0-100 based on 25 key criteria
+                See how prepared your organization is based on key funding-readiness criteria.
               </p>
             </div>
 
@@ -55,7 +54,7 @@ export default function Landing({ onStart, onAdminClick }: LandingProps) {
                 Strengths & Gaps
               </h4>
               <p className="text-slate-600 text-sm">
-                Identify what you're doing well and areas for improvement
+                Understand where you are strong and where you need to improve.
               </p>
             </div>
 
@@ -67,7 +66,7 @@ export default function Landing({ onStart, onAdminClick }: LandingProps) {
                 Next Steps
               </h4>
               <p className="text-slate-600 text-sm">
-                Receive actionable recommendations to improve your readiness
+                Get tailored action steps to move closer to funding readiness.
               </p>
             </div>
           </div>
@@ -76,7 +75,7 @@ export default function Landing({ onStart, onAdminClick }: LandingProps) {
             <h4 className="font-semibold text-slate-800 mb-3">
               Assessment Categories:
             </h4>
-            <ul className="space-y-2 text-slate-700">
+            <ul className="grid md:grid-cols-2 gap-2 text-slate-700">
               <li className="flex items-start">
                 <CheckCircle2 className="w-5 h-5 text-emerald-500 mr-2 mt-0.5 flex-shrink-0" />
                 <span>Organizational Foundations</span>
@@ -87,15 +86,19 @@ export default function Landing({ onStart, onAdminClick }: LandingProps) {
               </li>
               <li className="flex items-start">
                 <CheckCircle2 className="w-5 h-5 text-emerald-500 mr-2 mt-0.5 flex-shrink-0" />
-                <span>Program Design</span>
+                <span>Program or Service Readiness</span>
               </li>
               <li className="flex items-start">
                 <CheckCircle2 className="w-5 h-5 text-emerald-500 mr-2 mt-0.5 flex-shrink-0" />
-                <span>Organizational Documentation</span>
+                <span>Documentation & Compliance</span>
               </li>
               <li className="flex items-start">
                 <CheckCircle2 className="w-5 h-5 text-emerald-500 mr-2 mt-0.5 flex-shrink-0" />
-                <span>Grant Management Capacity</span>
+                <span>Funding Strategy</span>
+              </li>
+              <li className="flex items-start">
+                <CheckCircle2 className="w-5 h-5 text-emerald-500 mr-2 mt-0.5 flex-shrink-0" />
+                <span>Procurement Readiness</span>
               </li>
             </ul>
           </div>
@@ -115,7 +118,7 @@ export default function Landing({ onStart, onAdminClick }: LandingProps) {
 
         <div className="text-center text-slate-600 text-sm">
           <p>
-            This free assessment tool helps nonprofits make informed decisions about pursuing grant funding.
+            This free assessment tool helps organizations make informed decisions about pursuing funding opportunities.
           </p>
         </div>
       </div>
