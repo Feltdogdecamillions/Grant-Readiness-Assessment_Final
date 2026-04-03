@@ -3,7 +3,6 @@ import { CheckCircle2, XCircle, AlertCircle, ArrowRight, RefreshCw, Download, Tr
 import { questions, categories } from '../data/questions';
 import { procurementQuestions, procurementCategories, categoryWeights } from '../data/procurementQuestions';
 import ShareableCard from './ShareableCard';
-import ProcurementResults from './ProcurementResults';
 import { PathwayRoute } from '../utils/routingLogic';
 
 interface ResultsProps {
@@ -16,11 +15,20 @@ interface ResultsProps {
   email: string;
   onRestart: () => void;
   pathway?: PathwayRoute | null;
+  intakeResponses?: {
+    organizationType: string;
+    fundingType: string;
+    yearsInOperation: string;
+    annualRevenue: string;
+    pastPerformance: string;
+  };
 }
 
-export default function Results({ score, responses, procurementScore, procurementResponses, name, organization, email, onRestart }: ResultsProps) {
+export default function Results({ score, responses, procurementScore, procurementResponses, name, organization, email, onRestart, intakeResponses }: ResultsProps) {
   const hasGrantAssessment = responses.length > 0;
   const hasProcurementAssessment = procurementResponses.length > 0;
+  const isForProfit = intakeResponses?.organizationType === 'For-profit';
+  const fundingType = intakeResponses?.fundingType || '';
   const getScoreLevel = (score: number) => {
     if (score >= 71) return { level: 'Grant Ready', color: 'emerald', description: 'Your organization is well-prepared for grant applications' };
     if (score >= 41) return { level: 'Partially Ready', color: 'amber', description: 'Your organization has a foundation but needs to strengthen several areas before pursuing grants' };
@@ -174,6 +182,91 @@ export default function Results({ score, responses, procurementScore, procuremen
       }
     });
     return improvements;
+  };
+
+  const getProcurementRecommendations = () => {
+    const categoryScores = getProcurementCategoryScores();
+    const recommendations = [];
+
+    const weakCategories = categoryScores
+      .filter(cat => (cat.points / cat.maxPoints) < 0.6)
+      .sort((a, b) => (a.points / a.maxPoints) - (b.points / b.maxPoints));
+
+    if (procurementScore >= 80) {
+      recommendations.push('You appear procurement-ready and should begin targeting specific agency opportunities and strengthening your pipeline strategy.');
+      recommendations.push('Focus on identifying contract opportunities that align with your NAICS codes and capabilities.');
+      recommendations.push('Build relationships with contracting officers and attend agency outreach events.');
+      recommendations.push('Continue monitoring SAM.gov for relevant solicitations and maintain your registrations.');
+    } else if (procurementScore >= 60) {
+      const gaps = [];
+      if (weakCategories.some(c => c.category === 'SAM.gov Registration')) gaps.push('SAM registration');
+      if (weakCategories.some(c => c.category === 'Capability Statement')) gaps.push('capability statement development');
+      if (weakCategories.some(c => c.category === 'Bid Readiness')) gaps.push('bid systems');
+
+      const gapText = gaps.length > 0 ? `, but key gaps remain in ${gaps.join(', ')}.` : '.';
+      recommendations.push(`You are moderately prepared for procurement opportunities${gapText}`);
+      recommendations.push('Prioritize completing your SAM.gov registration and ensuring all certifications are current.');
+      recommendations.push('Develop or refine your capability statement to showcase your strengths and past performance.');
+      recommendations.push('Consider starting with subcontracting opportunities while strengthening your foundation.');
+    } else if (procurementScore >= 40) {
+      recommendations.push('You should focus on foundational procurement setup before actively bidding on contracts.');
+      recommendations.push('Complete SAM.gov registration as your first priority, as this is required for federal contracts.');
+      recommendations.push('Work on developing a professional capability statement that highlights your business strengths.');
+      recommendations.push('Build past performance through smaller contracts or subcontracting relationships.');
+    } else {
+      recommendations.push('You should focus on foundational procurement setup before bidding.');
+      recommendations.push('Start with business registration, obtaining an EIN, and setting up a separate business bank account.');
+      recommendations.push('Register in SAM.gov and ensure all business information is accurate and current.');
+      recommendations.push('Consider working with a PTAC (Procurement Technical Assistance Center) for guidance on getting started.');
+    }
+
+    if (weakCategories.length > 0) {
+      weakCategories.slice(0, 3).forEach(cat => {
+        if (cat.category === 'Business Foundation') {
+          recommendations.push('Strengthen your business foundation by ensuring proper registration, EIN, and separate business banking.');
+        } else if (cat.category === 'SAM.gov Registration') {
+          recommendations.push('Complete and maintain active SAM.gov registration with all required documentation and certifications.');
+        } else if (cat.category === 'Capability Statement') {
+          recommendations.push('Develop a comprehensive capability statement showcasing your experience, capabilities, and differentiators.');
+        } else if (cat.category === 'Past Performance') {
+          recommendations.push('Build past performance documentation through contracts, subcontracts, or similar commercial work.');
+        } else if (cat.category === 'Financial Readiness') {
+          recommendations.push('Improve financial capacity with accounting systems, lines of credit, and bonding capability if needed.');
+        }
+      });
+    }
+
+    return recommendations;
+  };
+
+  const getProcurementTopStrengths = () => {
+    const categoryScores = getProcurementCategoryScores();
+    return categoryScores
+      .filter(cat => (cat.points / cat.maxPoints) >= 0.7)
+      .sort((a, b) => (b.points / b.maxPoints) - (a.points / a.maxPoints))
+      .slice(0, 3)
+      .map(cat => cat.category);
+  };
+
+  const getProcurementTopGaps = () => {
+    const categoryScores = getProcurementCategoryScores();
+    return categoryScores
+      .filter(cat => (cat.points / cat.maxPoints) < 0.5)
+      .sort((a, b) => (a.points / a.maxPoints) - (b.points / b.maxPoints))
+      .slice(0, 3)
+      .map(cat => cat.category);
+  };
+
+  const getSuggestedFundingPath = () => {
+    if (procurementScore >= 80) {
+      return 'Prime contractor opportunities with federal agencies';
+    } else if (procurementScore >= 60) {
+      return 'Subcontracting and smaller direct contracts';
+    } else if (procurementScore >= 40) {
+      return 'Subcontracting while building capability';
+    } else {
+      return 'Focus on preparation before pursuing contracts';
+    }
   };
 
   const [copied, setCopied] = useState(false);
@@ -332,6 +425,10 @@ Generated by Grants Made Simple Grant Readiness Assessment Tool
   const procurementCategoryScores = hasProcurementAssessment ? getProcurementCategoryScores() : [];
   const procurementStrengths = hasProcurementAssessment ? getProcurementStrengths() : [];
   const procurementImprovements = hasProcurementAssessment ? getProcurementImprovementAreas() : [];
+  const procurementRecommendations = hasProcurementAssessment ? getProcurementRecommendations() : [];
+  const procurementTopStrengths = hasProcurementAssessment ? getProcurementTopStrengths() : [];
+  const procurementTopGaps = hasProcurementAssessment ? getProcurementTopGaps() : [];
+  const suggestedFundingPath = hasProcurementAssessment ? getSuggestedFundingPath() : '';
 
   const getAssessmentTitle = () => {
     if (hasGrantAssessment && hasProcurementAssessment) return 'Grant & Procurement Readiness Results';
@@ -707,14 +804,246 @@ Generated by Grants Made Simple Grant Readiness Assessment Tool
         )}
 
         {hasProcurementAssessment && procurementScoreLevel && (
-          <ProcurementResults
-            score={procurementScore}
-            responses={procurementResponses}
-            scoreLevel={procurementScoreLevel}
-            categoryScores={procurementCategoryScores}
-            strengths={procurementStrengths}
-            improvements={procurementImprovements}
-          />
+          <>
+            {isForProfit && (fundingType === 'Grants' || fundingType === 'Both') && (
+              <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-6 mb-6">
+                <div className="flex items-start gap-3">
+                  <AlertCircle className="w-6 h-6 text-blue-600 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <h4 className="font-semibold text-blue-900 mb-2">Note for For-Profit Entities</h4>
+                    <p className="text-blue-800 text-sm leading-relaxed">
+                      For-profit entities may be eligible for some grant opportunities, but eligibility is often narrower and may depend on industry, public benefit, innovation, partnerships, or specific grant guidelines.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="bg-white rounded-2xl shadow-xl p-8 mb-6">
+              <div className="flex justify-between items-start mb-6">
+                <div>
+                  <h2 className="text-2xl font-bold text-slate-900 mb-2">Your Procurement Readiness Score</h2>
+                  <p className="text-slate-600">Assessment completed on {new Date().toLocaleDateString()}</p>
+                </div>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-8 mb-8">
+                <div className="text-center">
+                  <div className="relative inline-block mb-4">
+                    <svg className="w-56 h-56 transform -rotate-90">
+                      <circle
+                        cx="112"
+                        cy="112"
+                        r="100"
+                        stroke="#e2e8f0"
+                        strokeWidth="16"
+                        fill="none"
+                      />
+                      <circle
+                        cx="112"
+                        cy="112"
+                        r="100"
+                        stroke={`${
+                          procurementScoreLevel.color === 'emerald' ? '#10b981' :
+                          procurementScoreLevel.color === 'blue' ? '#3b82f6' :
+                          procurementScoreLevel.color === 'amber' ? '#f59e0b' : '#ef4444'
+                        }`}
+                        strokeWidth="16"
+                        fill="none"
+                        strokeDasharray={`${2 * Math.PI * 100}`}
+                        strokeDashoffset={`${2 * Math.PI * 100 * (1 - procurementScore / 100)}`}
+                        strokeLinecap="round"
+                        className="transition-all duration-1000"
+                      />
+                    </svg>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div>
+                        <div className="text-6xl font-bold text-slate-900">{procurementScore}</div>
+                        <div className="text-sm text-slate-600">out of 100</div>
+                      </div>
+                    </div>
+                  </div>
+                  <h3 className={`text-3xl font-bold mb-2 ${
+                    procurementScoreLevel.color === 'emerald' ? 'text-emerald-600' :
+                    procurementScoreLevel.color === 'blue' ? 'text-blue-600' :
+                    procurementScoreLevel.color === 'amber' ? 'text-amber-600' : 'text-red-600'
+                  }`}>
+                    {procurementScoreLevel.level}
+                  </h3>
+                  <p className="text-slate-600 max-w-md mx-auto">
+                    {procurementScoreLevel.description}
+                  </p>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="bg-emerald-50 rounded-xl p-6">
+                    <div className="flex items-center gap-3 mb-2">
+                      <CheckCircle2 className="w-6 h-6 text-emerald-600" />
+                      <h3 className="font-semibold text-slate-900">Strong Areas</h3>
+                    </div>
+                    <p className="text-4xl font-bold text-emerald-600">{procurementStrengths.length}</p>
+                    <p className="text-sm text-slate-600">Areas where you excel</p>
+                  </div>
+                  <div className="bg-amber-50 rounded-xl p-6">
+                    <div className="flex items-center gap-3 mb-2">
+                      <AlertCircle className="w-6 h-6 text-amber-600" />
+                      <h3 className="font-semibold text-slate-900">Growth Areas</h3>
+                    </div>
+                    <p className="text-4xl font-bold text-amber-600">{procurementImprovements.length}</p>
+                    <p className="text-sm text-slate-600">Areas to develop</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className={`mt-6 p-6 rounded-xl border-2 ${
+                procurementScore >= 80 ? 'bg-emerald-50 border-emerald-200' :
+                procurementScore >= 60 ? 'bg-blue-50 border-blue-200' :
+                procurementScore >= 40 ? 'bg-amber-50 border-amber-200' :
+                'bg-red-50 border-red-200'
+              }`}>
+                <h4 className="font-bold text-slate-900 text-lg mb-3 flex items-center gap-2">
+                  <AlertCircle className={`w-5 h-5 ${
+                    procurementScore >= 80 ? 'text-emerald-600' :
+                    procurementScore >= 60 ? 'text-blue-600' :
+                    procurementScore >= 40 ? 'text-amber-600' :
+                    'text-red-600'
+                  }`} />
+                  Understanding Your Score
+                </h4>
+                <div className="space-y-3 text-slate-700">
+                  {procurementScore >= 80 ? (
+                    <>
+                      <p className="font-semibold text-emerald-800">
+                        80–100: Procurement Ready
+                      </p>
+                      <p className="text-sm leading-relaxed">
+                        Your business has strong foundational infrastructure, proper registration, comprehensive documentation, and operational capacity. You can actively pursue government contract opportunities that match your capabilities and certifications.
+                      </p>
+                    </>
+                  ) : procurementScore >= 60 ? (
+                    <>
+                      <p className="font-semibold text-blue-800">
+                        60–79: Emerging/Competitive
+                      </p>
+                      <p className="text-sm leading-relaxed">
+                        Your business is competitive but should strengthen key areas before aggressively pursuing large contracts. Focus on completing any missing SAM.gov elements, refining your capability statement, and building documentation. Consider subcontracting opportunities while addressing gaps.
+                      </p>
+                    </>
+                  ) : procurementScore >= 40 ? (
+                    <>
+                      <p className="font-semibold text-amber-800">
+                        40–59: Early Stage
+                      </p>
+                      <p className="text-sm leading-relaxed">
+                        Your business has made initial progress but needs significant development before pursuing competitive contracts. Prioritize SAM.gov registration completion, developing a professional capability statement, and building past performance through smaller opportunities or subcontracts.
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <p className="font-semibold text-red-800">
+                        0–39: Not Procurement Ready
+                      </p>
+                      <p className="text-sm leading-relaxed">
+                        Your business needs to establish core infrastructure before pursuing government contracts. Focus first on business registration, SAM.gov setup, financial readiness, and basic documentation. This is a normal starting point for businesses new to procurement.
+                      </p>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-6 mb-6">
+              {procurementTopStrengths.length > 0 && (
+                <div className="bg-white rounded-2xl shadow-xl p-8">
+                  <h3 className="text-2xl font-bold text-slate-900 mb-6 flex items-center gap-2">
+                    <CheckCircle2 className="w-7 h-7 text-emerald-600" />
+                    Top Strengths
+                  </h3>
+                  <div className="space-y-3">
+                    {procurementTopStrengths.map((strength, index) => (
+                      <div key={index} className="flex items-start gap-3 p-3 bg-emerald-50 rounded-lg">
+                        <CheckCircle2 className="w-5 h-5 text-emerald-600 mt-0.5 flex-shrink-0" />
+                        <p className="text-slate-700 font-medium">{strength}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {procurementTopGaps.length > 0 && (
+                <div className="bg-white rounded-2xl shadow-xl p-8">
+                  <h3 className="text-2xl font-bold text-slate-900 mb-6 flex items-center gap-2">
+                    <AlertCircle className="w-7 h-7 text-amber-600" />
+                    Top Gaps
+                  </h3>
+                  <div className="space-y-3">
+                    {procurementTopGaps.map((gap, index) => (
+                      <div key={index} className="flex items-start gap-3 p-3 bg-amber-50 rounded-lg">
+                        <XCircle className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
+                        <p className="text-slate-700 font-medium">{gap}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="bg-white rounded-2xl shadow-xl p-8 mb-6">
+              <h3 className="text-2xl font-bold text-slate-900 mb-6 flex items-center gap-2">
+                <ArrowRight className="w-7 h-7 text-blue-600" />
+                Recommended Next Steps
+              </h3>
+              <div className="space-y-4">
+                {procurementRecommendations.map((rec, index) => (
+                  <div key={index} className="flex items-start gap-4 p-5 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors">
+                    <div className="bg-blue-100 rounded-full p-2 mt-0.5 flex-shrink-0">
+                      <div className="w-6 h-6 flex items-center justify-center text-blue-700 font-bold text-sm">
+                        {index + 1}
+                      </div>
+                    </div>
+                    <p className="text-slate-700 flex-1 pt-1">{rec}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="bg-white rounded-2xl shadow-xl p-8 mb-6">
+              <h3 className="text-2xl font-bold text-slate-900 mb-4 flex items-center gap-2">
+                <TrendingUp className="w-7 h-7 text-emerald-600" />
+                Suggested Funding Path
+              </h3>
+              <div className="bg-gradient-to-r from-emerald-50 to-blue-50 border-2 border-emerald-200 rounded-xl p-6">
+                <p className="text-lg font-semibold text-slate-900">{suggestedFundingPath}</p>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-2xl shadow-xl p-8 mb-6">
+              <h3 className="text-2xl font-bold text-slate-900 mb-6">Category Breakdown</h3>
+              <div className="space-y-4">
+                {procurementCategoryScores.map((cat, index) => {
+                  const percentage = (cat.points / cat.maxPoints) * 100;
+                  return (
+                    <div key={index}>
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="font-semibold text-slate-900">{cat.category}</span>
+                        <span className="text-sm text-slate-600">{cat.points}/{cat.maxPoints} points</span>
+                      </div>
+                      <div className="w-full bg-slate-200 rounded-full h-3 overflow-hidden">
+                        <div
+                          className={`h-full rounded-full transition-all duration-1000 ${
+                            percentage >= 70 ? 'bg-emerald-500' :
+                            percentage >= 50 ? 'bg-blue-500' :
+                            percentage >= 30 ? 'bg-amber-500' : 'bg-red-500'
+                          }`}
+                          style={{ width: `${percentage}%` }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </>
         )}
 
         <div className="text-center mt-8 p-8 bg-slate-50 rounded-2xl border-2 border-slate-200">

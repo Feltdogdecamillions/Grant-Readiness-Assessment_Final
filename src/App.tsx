@@ -211,6 +211,7 @@ function App() {
           email={email}
           onRestart={handleRestart}
           pathway={pathway}
+          intakeResponses={intakeResponses || undefined}
         />
       )}
       {currentState === 'admin' && <AdminDashboard onBack={handleBackFromAdmin} />}
