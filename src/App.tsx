@@ -6,11 +6,15 @@ import ProcurementQuestionnaire from './components/ProcurementQuestionnaire';
 import EmailCapture from './components/EmailCapture';
 import Results from './components/Results';
 import AdminDashboard from './components/AdminDashboard';
+import UpsellPage from './components/UpsellPage';
+import DetailedResults from './components/DetailedResults';
+import ScheduleSession from './components/ScheduleSession';
 import { supabase } from './lib/supabase';
 import { determinePathway, PathwayRoute } from './utils/routingLogic';
 import { procurementQuestions, categoryWeights } from './data/procurementQuestions';
+import { pricingTiers } from './config/pricing';
 
-type AppState = 'landing' | 'intake' | 'questionnaire' | 'procurement' | 'email' | 'results' | 'admin';
+type AppState = 'landing' | 'intake' | 'questionnaire' | 'procurement' | 'email' | 'results' | 'admin' | 'upsell' | 'detailed-results' | 'schedule-session';
 
 function App() {
   const [currentState, setCurrentState] = useState<AppState>('landing');
@@ -161,6 +165,59 @@ function App() {
     setCurrentState('landing');
   };
 
+  const handleUpsellUpgrade = async (tierId: string) => {
+    const tier = pricingTiers.find(t => t.id === tierId);
+    if (!tier) return;
+
+    try {
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-checkout-session`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          priceId: tier.stripePriceId,
+          successUrl: tier.successUrl,
+          cancelUrl: '/upsell',
+          customerEmail: email,
+          metadata: {
+            name,
+            organization,
+            score: score.toString(),
+            tierId: tier.id
+          }
+        })
+      });
+
+      if (response.ok) {
+        const { url } = await response.json();
+        if (url) {
+          window.location.href = url;
+        }
+      }
+    } catch (error) {
+      console.error('Error creating checkout session:', error);
+    }
+  };
+
+  const handleUpsellContinue = () => {
+    setCurrentState('results');
+  };
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const path = window.location.pathname;
+
+    if (path === '/upsell') {
+      setCurrentState('upsell');
+    } else if (path === '/detailed-results') {
+      setCurrentState('detailed-results');
+    } else if (path === '/schedule-session') {
+      setCurrentState('schedule-session');
+    }
+  }, []);
+
   if (configError) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center p-4">
@@ -215,6 +272,11 @@ function App() {
         />
       )}
       {currentState === 'admin' && <AdminDashboard onBack={handleBackFromAdmin} />}
+      {currentState === 'upsell' && (
+        <UpsellPage onUpgrade={handleUpsellUpgrade} onContinue={handleUpsellContinue} />
+      )}
+      {currentState === 'detailed-results' && <DetailedResults />}
+      {currentState === 'schedule-session' && <ScheduleSession />}
     </>
   );
 }
