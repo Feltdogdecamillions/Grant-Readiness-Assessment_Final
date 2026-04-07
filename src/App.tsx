@@ -9,12 +9,13 @@ import AdminDashboard from './components/AdminDashboard';
 import UpsellPage from './components/UpsellPage';
 import DetailedResults from './components/DetailedResults';
 import ScheduleSession from './components/ScheduleSession';
+import PurchaseConfirmation from './components/PurchaseConfirmation';
 import { supabase } from './lib/supabase';
 import { determinePathway, PathwayRoute } from './utils/routingLogic';
 import { procurementQuestions, categoryWeights } from './data/procurementQuestions';
 import { pricingTiers } from './config/pricing';
 
-type AppState = 'landing' | 'intake' | 'questionnaire' | 'procurement' | 'email' | 'results' | 'admin' | 'upsell' | 'detailed-results' | 'schedule-session';
+type AppState = 'landing' | 'intake' | 'questionnaire' | 'procurement' | 'email' | 'results' | 'admin' | 'upsell' | 'detailed-results' | 'schedule-session' | 'purchase-confirmation';
 
 function App() {
   const [currentState, setCurrentState] = useState<AppState>('landing');
@@ -215,6 +216,8 @@ function App() {
       setCurrentState('detailed-results');
     } else if (path === '/schedule-session') {
       setCurrentState('schedule-session');
+    } else if (path === '/purchase-confirmation') {
+      setCurrentState('purchase-confirmation');
     }
   }, []);
 
@@ -277,6 +280,7 @@ function App() {
       )}
       {currentState === 'detailed-results' && <DetailedResults />}
       {currentState === 'schedule-session' && <ScheduleSession />}
+      {currentState === 'purchase-confirmation' && <PurchaseConfirmation />}
     </>
   );
 }

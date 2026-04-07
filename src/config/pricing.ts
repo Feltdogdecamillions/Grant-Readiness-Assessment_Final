@@ -36,11 +36,12 @@ export const pricingTiers: PricingTier[] = [
       'Everything in the Action Plan',
       'Grant opportunity matching',
       'Procurement direction (if applicable)',
-      'Personalized funding strategy recommendations'
+      'Personalized funding strategy recommendations',
+      'BONUS: FREE 30-Minute Strategy Call ($150 value)'
     ],
     cta: 'Get Full Strategy Audit',
     stripePriceId: 'price_strategy_audit_97',
-    successUrl: '/detailed-results',
+    successUrl: '/purchase-confirmation',
     mostPopular: true
   },
   {

@@ -57,6 +57,12 @@ export default function UpsellPage({ onUpgrade, onContinue }: UpsellPageProps) {
                   ))}
                 </div>
 
+                <div className="bg-amber-50 border-2 border-amber-300 rounded-lg p-4 mb-4">
+                  <p className="text-sm font-bold text-amber-900 text-center">
+                    🎁 You'll also receive a FREE 30-minute strategy session after completing your assessment (must purchase before May 31, 2026).
+                  </p>
+                </div>
+
                 <button
                   onClick={() => onUpgrade(auditTier.id)}
                   className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-6 py-3 rounded-lg transition-all"
