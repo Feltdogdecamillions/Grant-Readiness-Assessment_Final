@@ -13,7 +13,7 @@ import PurchaseConfirmation from './components/PurchaseConfirmation';
 import { supabase } from './lib/supabase';
 import { determinePathway, PathwayRoute } from './utils/routingLogic';
 import { procurementQuestions, categoryWeights } from './data/procurementQuestions';
-import { pricingTiers } from './config/pricing';
+import { pricingTiers, bookPreOrder } from './config/pricing';
 
 type AppState = 'landing' | 'intake' | 'questionnaire' | 'procurement' | 'email' | 'results' | 'admin' | 'upsell' | 'detailed-results' | 'schedule-session' | 'purchase-confirmation';
 
@@ -166,11 +166,17 @@ function App() {
     setCurrentState('landing');
   };
 
-  const handleUpsellUpgrade = async (tierId: string) => {
+  const handleUpsellUpgrade = async (tierId: string, includeBook?: boolean) => {
     const tier = pricingTiers.find(t => t.id === tierId);
     if (!tier) return;
 
     try {
+      const lineItems = [tier.stripePriceId];
+
+      if (includeBook) {
+        lineItems.push(bookPreOrder.stripePriceId);
+      }
+
       const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-checkout-session`, {
         method: 'POST',
         headers: {
@@ -179,6 +185,7 @@ function App() {
         },
         body: JSON.stringify({
           priceId: tier.stripePriceId,
+          lineItems,
           successUrl: tier.successUrl,
           cancelUrl: '/upsell',
           customerEmail: email,
@@ -186,7 +193,8 @@ function App() {
             name,
             organization,
             score: score.toString(),
-            tierId: tier.id
+            tierId: tier.id,
+            includesBook: includeBook ? 'true' : 'false'
           }
         })
       });

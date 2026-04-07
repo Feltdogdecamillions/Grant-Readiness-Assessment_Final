@@ -15,11 +15,11 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    const { priceId, successUrl, cancelUrl, customerEmail, metadata } = await req.json();
+    const { priceId, lineItems, successUrl, cancelUrl, customerEmail, metadata } = await req.json();
 
-    if (!priceId) {
+    if (!priceId && (!lineItems || lineItems.length === 0)) {
       return new Response(
-        JSON.stringify({ error: "Price ID is required" }),
+        JSON.stringify({ error: "Price ID or line items are required" }),
         {
           status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -43,24 +43,36 @@ Deno.serve(async (req: Request) => {
     const finalSuccessUrl = successUrl ? `${baseUrl}${successUrl}?session_id={CHECKOUT_SESSION_ID}` : `${baseUrl}/success?session_id={CHECKOUT_SESSION_ID}`;
     const finalCancelUrl = cancelUrl ? `${baseUrl}${cancelUrl}` : `${baseUrl}/`;
 
+    const items = lineItems && lineItems.length > 0 ? lineItems : [priceId];
+
+    const params: Record<string, string> = {
+      "mode": "payment",
+      "success_url": finalSuccessUrl,
+      "cancel_url": finalCancelUrl,
+    };
+
+    items.forEach((item: string, index: number) => {
+      params[`line_items[${index}][price]`] = item;
+      params[`line_items[${index}][quantity]`] = "1";
+    });
+
+    if (customerEmail) {
+      params["customer_email"] = customerEmail;
+    }
+
+    if (metadata) {
+      Object.entries(metadata).forEach(([key, value]) => {
+        params[`metadata[${key}]`] = String(value);
+      });
+    }
+
     const checkoutSession = await fetch("https://api.stripe.com/v1/checkout/sessions", {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${stripeSecretKey}`,
         "Content-Type": "application/x-www-form-urlencoded",
       },
-      body: new URLSearchParams({
-        "mode": "payment",
-        "line_items[0][price]": priceId,
-        "line_items[0][quantity]": "1",
-        "success_url": finalSuccessUrl,
-        "cancel_url": finalCancelUrl,
-        ...(customerEmail && { "customer_email": customerEmail }),
-        ...(metadata && Object.entries(metadata).reduce((acc, [key, value]) => {
-          acc[`metadata[${key}]`] = String(value);
-          return acc;
-        }, {} as Record<string, string>)),
-      }).toString(),
+      body: new URLSearchParams(params).toString(),
     });
 
     if (!checkoutSession.ok) {

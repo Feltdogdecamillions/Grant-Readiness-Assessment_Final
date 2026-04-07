@@ -11,6 +11,33 @@ export interface PricingTier {
   mostPopular?: boolean;
 }
 
+export interface BookProduct {
+  id: string;
+  name: string;
+  price: number;
+  description: string;
+  features: string[];
+  stripePriceId: string;
+  releaseDate: string;
+  futurePrice?: number;
+}
+
+export const bookPreOrder: BookProduct = {
+  id: 'grants-made-simple-book',
+  name: 'Grants Made Simple',
+  price: 20,
+  description: 'Be among the first to get access to my upcoming book, Grants Made Simple—a step-by-step guide to finding, applying for, and winning grants. This book breaks down the full system behind the assessment and shows you exactly how to move from readiness to results.',
+  features: [
+    'A beginner-friendly system for securing grants',
+    'How to find the right funding opportunities',
+    'How to write stronger, more competitive proposals',
+    'Common mistakes that get applications rejected'
+  ],
+  stripePriceId: 'price_grants_made_simple_book_20',
+  releaseDate: 'May 31, 2026',
+  futurePrice: 35
+};
+
 export const pricingTiers: PricingTier[] = [
   {
     id: 'action-plan',

@@ -1,14 +1,16 @@
-import { CheckCircle2, ArrowRight, Sparkles } from 'lucide-react';
-import { pricingTiers } from '../config/pricing';
+import { useState } from 'react';
+import { CheckCircle2, ArrowRight, Sparkles, BookOpen } from 'lucide-react';
+import { pricingTiers, bookPreOrder } from '../config/pricing';
 
 interface UpsellPageProps {
-  onUpgrade: (tierId: string) => void;
+  onUpgrade: (tierId: string, includeBook?: boolean) => void;
   onContinue: () => void;
 }
 
 export default function UpsellPage({ onUpgrade, onContinue }: UpsellPageProps) {
   const auditTier = pricingTiers.find(t => t.id === 'strategy-audit');
   const sessionTier = pricingTiers.find(t => t.id === 'strategy-session');
+  const [includeBook, setIncludeBook] = useState(false);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 py-12">
@@ -34,6 +36,49 @@ export default function UpsellPage({ onUpgrade, onContinue }: UpsellPageProps) {
             You've taken the first step with your Action Plan. Now accelerate your progress with personalized grant matching and expert guidance.
           </p>
 
+          <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-6 mb-6">
+            <label className="flex items-start gap-4 cursor-pointer group">
+              <input
+                type="checkbox"
+                checked={includeBook}
+                onChange={(e) => setIncludeBook(e.target.checked)}
+                className="mt-1 w-5 h-5 text-emerald-600 border-slate-300 rounded focus:ring-emerald-500 focus:ring-2 cursor-pointer"
+              />
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-2">
+                  <BookOpen className="w-5 h-5 text-blue-600" />
+                  <h4 className="font-bold text-slate-900 text-lg">
+                    📘 Pre-Order: {bookPreOrder.name} (Releases {bookPreOrder.releaseDate})
+                  </h4>
+                </div>
+                <p className="text-slate-700 text-sm mb-3 leading-relaxed">
+                  {bookPreOrder.description}
+                </p>
+                <div className="space-y-2 mb-4">
+                  {bookPreOrder.features.map((feature, idx) => (
+                    <div key={idx} className="flex items-start gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                      <p className="text-slate-700 text-sm">{feature}</p>
+                    </div>
+                  ))}
+                </div>
+                <div className="flex items-center gap-3 mb-2">
+                  <span className="text-2xl font-bold text-emerald-700">${bookPreOrder.price}</span>
+                  <span className="text-sm text-slate-600">pre-order price</span>
+                  {bookPreOrder.futurePrice && (
+                    <span className="text-sm text-slate-500 line-through">${bookPreOrder.futurePrice} after launch</span>
+                  )}
+                </div>
+                <p className="text-sm font-semibold text-blue-800 mb-1">
+                  Lock in early access before the official release on {bookPreOrder.releaseDate}.
+                </p>
+                <p className="text-xs text-slate-600 italic">
+                  You will receive your digital copy (PDF) via email on {bookPreOrder.releaseDate}.
+                </p>
+              </div>
+            </label>
+          </div>
+
           <div className="grid md:grid-cols-2 gap-6">
             {auditTier && (
               <div className="bg-white rounded-xl p-8 text-slate-900">
@@ -42,7 +87,17 @@ export default function UpsellPage({ onUpgrade, onContinue }: UpsellPageProps) {
                 </div>
                 <h3 className="text-2xl font-bold mb-2">{auditTier.name}</h3>
                 <div className="mb-4">
-                  <span className="text-4xl font-bold">${auditTier.price}</span>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-4xl font-bold">${auditTier.price}</span>
+                    {includeBook && (
+                      <span className="text-sm text-slate-600">+ ${bookPreOrder.price}</span>
+                    )}
+                  </div>
+                  {includeBook && (
+                    <p className="text-sm font-semibold text-emerald-700 mt-1">
+                      Total: ${auditTier.price + bookPreOrder.price}
+                    </p>
+                  )}
                 </div>
                 <p className="text-slate-600 text-sm mb-6">
                   {auditTier.description}
@@ -67,10 +122,10 @@ export default function UpsellPage({ onUpgrade, onContinue }: UpsellPageProps) {
                 </div>
 
                 <button
-                  onClick={() => onUpgrade(auditTier.id)}
+                  onClick={() => onUpgrade(auditTier.id, includeBook)}
                   className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-6 py-3 rounded-lg transition-all mb-2"
                 >
-                  Upgrade to Audit
+                  {includeBook ? `Upgrade to Audit + Book ($${auditTier.price + bookPreOrder.price})` : 'Upgrade to Audit'}
                 </button>
 
                 <p className="text-xs text-slate-600 text-center font-medium">
@@ -86,7 +141,17 @@ export default function UpsellPage({ onUpgrade, onContinue }: UpsellPageProps) {
                 </div>
                 <h3 className="text-2xl font-bold mb-2">{sessionTier.name}</h3>
                 <div className="mb-4">
-                  <span className="text-4xl font-bold">${sessionTier.price}</span>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-4xl font-bold">${sessionTier.price}</span>
+                    {includeBook && (
+                      <span className="text-sm text-slate-600">+ ${bookPreOrder.price}</span>
+                    )}
+                  </div>
+                  {includeBook && (
+                    <p className="text-sm font-semibold text-emerald-700 mt-1">
+                      Total: ${sessionTier.price + bookPreOrder.price}
+                    </p>
+                  )}
                 </div>
                 <p className="text-slate-600 text-sm mb-6">
                   {sessionTier.description}
@@ -102,10 +167,10 @@ export default function UpsellPage({ onUpgrade, onContinue }: UpsellPageProps) {
                 </div>
 
                 <button
-                  onClick={() => onUpgrade(sessionTier.id)}
+                  onClick={() => onUpgrade(sessionTier.id, includeBook)}
                   className="w-full bg-slate-700 hover:bg-slate-800 text-white font-bold px-6 py-3 rounded-lg transition-all"
                 >
-                  Upgrade to Premium
+                  {includeBook ? `Upgrade to Premium + Book ($${sessionTier.price + bookPreOrder.price})` : 'Upgrade to Premium'}
                 </button>
               </div>
             )}
