@@ -101,7 +101,7 @@ export default function ScheduleSession() {
           <div className="bg-amber-50 border-2 border-amber-300 rounded-lg p-4 mt-6 flex items-center justify-center gap-2">
             <AlertCircle className="w-5 h-5 text-amber-700 flex-shrink-0" />
             <p className="text-sm font-semibold text-amber-900">
-              Limited availability each week — schedule your session soon.
+              ⚠️ Strategy sessions are limited each week. Schedule your call now to secure your spot.
             </p>
           </div>
         </div>
