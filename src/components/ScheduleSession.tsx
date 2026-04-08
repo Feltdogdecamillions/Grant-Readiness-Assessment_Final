@@ -86,7 +86,7 @@ export default function ScheduleSession() {
               Click the button below to access our scheduling calendar and book your 30-minute session at a time that works for you.
             </p>
             <a
-              href="https://calendly.com"
+              href="https://calendar.app.google/rQGenW5LHczFkE2g7"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-block bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-8 py-4 rounded-lg transition-all transform hover:scale-105 shadow-lg"
