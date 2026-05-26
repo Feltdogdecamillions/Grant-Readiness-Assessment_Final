@@ -34,7 +34,7 @@ export const bookPreOrder: BookProduct = {
     'Common mistakes that get applications rejected'
   ],
   stripePriceId: 'price_grants_made_simple_book_20',
-  releaseDate: 'May 31, 2026',
+  releaseDate: 'July 31, 2026',
   futurePrice: 35
 };
 

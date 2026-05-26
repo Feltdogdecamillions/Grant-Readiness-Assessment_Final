@@ -117,7 +117,7 @@ export default function UpsellPage({ onUpgrade, onContinue }: UpsellPageProps) {
                     🎁 Your free 30-minute strategy session is included (limited to 10 spots per week).
                   </p>
                   <p className="text-xs text-amber-800 text-center">
-                    Must purchase before May 31, 2026
+                    Must purchase before July 31, 2026
                   </p>
                 </div>
 

@@ -15,7 +15,7 @@ export default function Landing({ onStart, onAdminClick }: LandingProps) {
   });
 
   useEffect(() => {
-    const targetDate = new Date('2026-05-31T23:59:59').getTime();
+    const targetDate = new Date('2026-07-31T23:59:59').getTime();
 
     const updateCountdown = () => {
       const now = new Date().getTime();
@@ -42,7 +42,7 @@ export default function Landing({ onStart, onAdminClick }: LandingProps) {
       <div className="bg-gradient-to-r from-amber-400 to-orange-500 text-slate-900 py-4 px-4 shadow-lg">
         <div className="max-w-4xl mx-auto text-center">
           <p className="text-lg sm:text-xl font-bold mb-2">
-            🎯 Limited-Time Offer: Get a FREE 30-Minute Grant Strategy Session when you complete your Grant Readiness Assessment. Offer ends May 31, 2026.
+            🎯 Limited-Time Offer: Get a FREE 30-Minute Grant Strategy Session when you complete your Grant Readiness Assessment. Offer ends July 31, 2026.
           </p>
           <div className="flex justify-center items-center gap-4 text-sm sm:text-base font-semibold">
             <Clock className="w-5 h-5" />
@@ -174,7 +174,7 @@ export default function Landing({ onStart, onAdminClick }: LandingProps) {
               </li>
             </ul>
             <p className="text-sm text-orange-700 font-semibold mb-4">
-              ⏰ This bonus is only available for a limited time and will be removed after May 31, 2026.
+              ⏰ This bonus is only available for a limited time and will be removed after July 31, 2026.
             </p>
           </div>
 
