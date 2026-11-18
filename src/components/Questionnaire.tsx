@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { questions } from '../data/questions';
 import { ChevronLeft, ChevronRight, Info } from 'lucide-react';
 
@@ -7,12 +7,37 @@ interface QuestionnaireProps {
   displayNote?: string | null;
 }
 
+const STORAGE_KEY = 'griq-questionnaire-progress';
+
+function loadSavedResponses(): (boolean | null)[] {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed) && parsed.length === questions.length) {
+        return parsed;
+      }
+    }
+  } catch {
+    // ignore corrupted or unavailable stored progress
+  }
+  return new Array(questions.length).fill(null);
+}
+
 export default function Questionnaire({ onComplete, displayNote }: QuestionnaireProps) {
+  const savedResponses = loadSavedResponses();
+  const hasSavedProgress = savedResponses.some(r => r !== null);
   const [showIntro, setShowIntro] = useState(true);
   const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [responses, setResponses] = useState<(boolean | null)[]>(
-    new Array(questions.length).fill(null)
-  );
+  const [responses, setResponses] = useState<(boolean | null)[]>(savedResponses);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(responses));
+    } catch {
+      // storage unavailable; progress simply won't persist
+    }
+  }, [responses]);
 
   const handleResponse = (answer: boolean) => {
     const newResponses = [...responses];
@@ -41,8 +66,27 @@ export default function Questionnaire({ onComplete, displayNote }: Questionnaire
   const handleSubmit = () => {
     const allAnswered = responses.every(r => r !== null);
     if (allAnswered) {
+      try {
+        localStorage.removeItem(STORAGE_KEY);
+      } catch {
+        // ignore storage errors
+      }
       onComplete(responses as boolean[]);
     }
+  };
+
+  const firstUnanswered = responses.findIndex(r => r === null);
+  const resumeQuestion = firstUnanswered === -1 ? questions.length - 1 : firstUnanswered;
+
+  const startFresh = () => {
+    setResponses(new Array(questions.length).fill(null));
+    setCurrentQuestion(0);
+    setShowIntro(false);
+  };
+
+  const resumeSaved = () => {
+    setCurrentQuestion(resumeQuestion);
+    setShowIntro(false);
   };
 
   const progress = ((currentQuestion + 1) / questions.length) * 100;
@@ -82,6 +126,10 @@ export default function Questionnaire({ onComplete, displayNote }: Questionnaire
                   <span className="text-emerald-600 mr-2 mt-1">•</span>
                   <span>You'll receive a readiness score and tailored next steps at the end</span>
                 </li>
+                <li className="flex items-start">
+                  <span className="text-emerald-600 mr-2 mt-1">•</span>
+                  <span>Your progress is saved on this device, so you can leave and return later</span>
+                </li>
               </ul>
             </div>
 
@@ -94,12 +142,24 @@ export default function Questionnaire({ onComplete, displayNote }: Questionnaire
               </div>
             )}
 
-            <div className="text-center">
+            <div className="text-center space-y-3">
+              {hasSavedProgress && (
+                <button
+                  onClick={resumeSaved}
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-8 py-4 rounded-lg text-lg transition-colors duration-200 shadow-lg hover:shadow-xl block w-full"
+                >
+                  Resume Where I Left Off
+                </button>
+              )}
               <button
-                onClick={() => setShowIntro(false)}
-                className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-8 py-4 rounded-lg text-lg transition-colors duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                onClick={hasSavedProgress ? startFresh : () => setShowIntro(false)}
+                className={`font-semibold px-8 py-4 rounded-lg text-lg transition-colors duration-200 block w-full ${
+                  hasSavedProgress
+                    ? 'bg-white hover:bg-slate-50 text-slate-700 border-2 border-slate-300'
+                    : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg hover:shadow-xl'
+                }`}
               >
-                Begin Assessment
+                {hasSavedProgress ? 'Start Over From the Beginning' : 'Begin Assessment'}
               </button>
             </div>
           </div>
