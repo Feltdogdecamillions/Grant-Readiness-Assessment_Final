@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { Download, ArrowLeft, RefreshCw } from 'lucide-react';
+import { Download, ArrowLeft, RefreshCw, Tag } from 'lucide-react';
 
 interface Assessment {
   id: string;
@@ -24,6 +24,16 @@ export default function AdminDashboard({ onBack }: AdminDashboardProps) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   const ADMIN_PASSWORD = 'admin123'; // Change this to a secure password
+
+  const [promo, setPromo] = useState({
+    promoEnabled: true,
+    promoPriceCents: 0,
+    regularPriceCents: 9700,
+    promoStartDate: '2026-11-18',
+    promoEndDate: '2027-01-31',
+  });
+  const [promoSaving, setPromoSaving] = useState(false);
+  const [promoMessage, setPromoMessage] = useState<string | null>(null);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -59,8 +69,71 @@ export default function AdminDashboard({ onBack }: AdminDashboardProps) {
   useEffect(() => {
     if (isAuthenticated) {
       fetchAssessments();
+      fetchPromotionSettings();
     }
   }, [isAuthenticated]);
+
+  const fetchPromotionSettings = async () => {
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/update-promotion-settings`,
+        {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${ADMIN_PASSWORD}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+      if (!response.ok) return;
+      const { settings } = await response.json();
+      if (settings) {
+        setPromo({
+          promoEnabled: settings.promo_enabled,
+          promoPriceCents: settings.promo_price_cents,
+          regularPriceCents: settings.regular_price_cents,
+          promoStartDate: settings.promo_starts_at.slice(0, 10),
+          promoEndDate: settings.promo_ends_at.slice(0, 10),
+        });
+      }
+    } catch (err) {
+      console.error('Error loading promotion settings:', err);
+    }
+  };
+
+  const savePromotionSettings = async () => {
+    setPromoSaving(true);
+    setPromoMessage(null);
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/update-promotion-settings`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${ADMIN_PASSWORD}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            promoEnabled: promo.promoEnabled,
+            promoPriceCents: promo.promoPriceCents,
+            regularPriceCents: promo.regularPriceCents,
+            promoStartDate: promo.promoStartDate,
+            promoEndDate: promo.promoEndDate,
+          }),
+        }
+      );
+      const result = await response.json();
+      if (!response.ok) {
+        setPromoMessage(result.error || 'Failed to save promotion settings.');
+      } else {
+        setPromoMessage('Promotion settings saved. Pricing updates apply immediately.');
+      }
+    } catch {
+      setPromoMessage('Failed to save promotion settings.');
+    } finally {
+      setPromoSaving(false);
+    }
+  };
 
   const downloadCSV = () => {
     const headers = ['Name', 'Email', 'Organization', 'Score', 'Date'];
@@ -146,6 +219,76 @@ export default function AdminDashboard({ onBack }: AdminDashboardProps) {
               <p className="text-slate-600 mt-1">
                 {assessments.length} total submission{assessments.length !== 1 ? 's' : ''}
               </p>
+
+              <div className="mt-6 bg-slate-50 border border-slate-200 rounded-xl p-6 max-w-2xl">
+                <h2 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+                  <Tag className="w-5 h-5 text-emerald-600" />
+                  Promotion &amp; Pricing Settings
+                </h2>
+                <div className="space-y-4">
+                  <label className="flex items-center gap-3">
+                    <input
+                      type="checkbox"
+                      checked={promo.promoEnabled}
+                      onChange={(e) => setPromo({ ...promo, promoEnabled: e.target.checked })}
+                      className="w-5 h-5 text-emerald-600 border-slate-300 rounded focus:ring-emerald-500"
+                    />
+                    <span className="text-sm text-slate-700">Promotion enabled</span>
+                  </label>
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Promo start date (Eastern Time)</label>
+                      <input
+                        type="date"
+                        value={promo.promoStartDate}
+                        onChange={(e) => setPromo({ ...promo, promoStartDate: e.target.value })}
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Promo end date (Eastern Time)</label>
+                      <input
+                        type="date"
+                        value={promo.promoEndDate}
+                        onChange={(e) => setPromo({ ...promo, promoEndDate: e.target.value })}
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Promotional price ($)</label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={promo.promoPriceCents / 100}
+                        onChange={(e) => setPromo({ ...promo, promoPriceCents: Math.round(Number(e.target.value) * 100) })}
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-1">Regular price ($)</label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={promo.regularPriceCents / 100}
+                        onChange={(e) => setPromo({ ...promo, regularPriceCents: Math.round(Number(e.target.value) * 100) })}
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg"
+                      />
+                    </div>
+                  </div>
+                  <button
+                    onClick={savePromotionSettings}
+                    disabled={promoSaving}
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-6 py-2 rounded-lg transition-colors disabled:opacity-50"
+                  >
+                    {promoSaving ? 'Saving...' : 'Save Promotion Settings'}
+                  </button>
+                  {promoMessage && (
+                    <p className={`text-sm ${promoMessage.startsWith('Promotion settings saved') ? 'text-emerald-700' : 'text-red-600'}`}>
+                      {promoMessage}
+                    </p>
+                  )}
+                </div>
+              </div>
             </div>
 
             <div className="flex gap-3">

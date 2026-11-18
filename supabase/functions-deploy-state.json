@@ -1,0 +1,17 @@
+{
+  "projectId": "64702677",
+  "functions": {
+    "create-checkout-session": {
+      "hasChanged": false,
+      "hash": "2c20967b688fbd54914064c0166950713d362e96c915d6a85835091e6a8b4d4a"
+    },
+    "send-assessment-email": {
+      "hasChanged": false,
+      "hash": "afda7065519381eb281532c5c7c7ac34f5cf4b26f93201736e54c486e3aed392"
+    },
+    "update-promotion-settings": {
+      "hasChanged": false,
+      "hash": "7e0f1ef58dd91300e26386c27accfce67f6a91a8e7350fef46db360f8943205b"
+    }
+  }
+}

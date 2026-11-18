@@ -14,6 +14,7 @@ import { supabase } from './lib/supabase';
 import { determinePathway, PathwayRoute } from './utils/routingLogic';
 import { procurementQuestions, categoryWeights } from './data/procurementQuestions';
 import { pricingTiers, bookPreOrder } from './config/pricing';
+import { usePromotion } from './hooks/usePromotion';
 
 type AppState = 'landing' | 'intake' | 'questionnaire' | 'procurement' | 'email' | 'results' | 'admin' | 'upsell' | 'detailed-results' | 'schedule-session' | 'purchase-confirmation';
 
@@ -26,9 +27,11 @@ function App() {
   const [name, setName] = useState('');
   const [organization, setOrganization] = useState('');
   const [email, setEmail] = useState('');
+  const [leadDetails, setLeadDetails] = useState<{ organizationType: string; state: string; primaryChallenge: string; marketingConsent: boolean } | null>(null);
   const [score, setScore] = useState(0);
   const [procurementScore, setProcurementScore] = useState(0);
   const [configError, setConfigError] = useState(false);
+  const { promoActive } = usePromotion();
 
   useEffect(() => {
     if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY) {
@@ -71,10 +74,24 @@ function App() {
     setCurrentState('email');
   };
 
-  const handleEmailSubmit = async (data: { name: string; organization: string; email: string }) => {
+  const handleEmailSubmit = async (data: {
+    name: string;
+    organization: string;
+    email: string;
+    organizationType: string;
+    state: string;
+    primaryChallenge: string;
+    marketingConsent: boolean;
+  }) => {
     setName(data.name);
     setOrganization(data.organization);
     setEmail(data.email);
+    setLeadDetails({
+      organizationType: data.organizationType,
+      state: data.state,
+      primaryChallenge: data.primaryChallenge,
+      marketingConsent: data.marketingConsent,
+    });
 
     const yesCount = responses.filter(r => r).length;
     const calculatedScore = yesCount * 4;
@@ -94,7 +111,13 @@ function App() {
           score: calculatedScore,
           intake_responses: intakeResponses,
           procurement_responses: procurementResponses.length > 0 ? procurementResponses : null,
-          procurement_score: calculatedProcurementScore
+          procurement_score: calculatedProcurementScore,
+          lead_details: {
+            organization_type: data.organizationType,
+            state: data.state,
+            primary_challenge: data.primaryChallenge,
+          },
+          marketing_consent: data.marketingConsent
         });
 
       if (error) {
@@ -200,9 +223,14 @@ function App() {
       });
 
       if (response.ok) {
-        const { url } = await response.json();
-        if (url) {
-          window.location.href = url;
+        const result = await response.json();
+        if (result.freePromotion) {
+          // Server-enforced free audit: skip checkout and deliver the full report.
+          setCurrentState('detailed-results');
+          return;
+        }
+        if (result.url) {
+          window.location.href = result.url;
         }
       }
     } catch (error) {
@@ -212,6 +240,10 @@ function App() {
 
   const handleUpsellContinue = () => {
     setCurrentState('results');
+  };
+
+  const handleAccessFreeAudit = () => {
+    setCurrentState('detailed-results');
   };
 
   useEffect(() => {
@@ -278,6 +310,7 @@ function App() {
           organization={organization}
           email={email}
           onRestart={handleRestart}
+          onAccessFreeAudit={handleAccessFreeAudit}
           pathway={pathway}
           intakeResponses={intakeResponses || undefined}
         />

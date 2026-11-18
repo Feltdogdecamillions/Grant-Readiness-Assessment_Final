@@ -1,0 +1,8 @@
+[functions.create-checkout-session]
+verify_jwt = false
+
+[functions.send-assessment-email]
+verify_jwt = false
+
+[functions.update-promotion-settings]
+verify_jwt = false

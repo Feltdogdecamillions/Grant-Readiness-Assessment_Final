@@ -1,5 +1,5 @@
-import { CheckCircle2, Target, TrendingUp, Settings, ShieldCheck, ClipboardList, Gauge, Map, Building2 } from 'lucide-react';
-import { useState } from 'react';
+import { CheckCircle2, Target, TrendingUp, Settings, ShieldCheck, ClipboardList, Gauge, Map, Building2, Clock } from 'lucide-react';
+import { usePromotion } from '../hooks/usePromotion';
 
 interface LandingProps {
   onStart: () => void;
@@ -7,8 +7,31 @@ interface LandingProps {
 }
 
 export default function Landing({ onStart, onAdminClick }: LandingProps) {
+  const { promoActive, regularPriceCents, timeLeft: bannerTime, loading } = usePromotion();
+  const primaryCta = promoActive
+    ? 'Get My Free Grant Readiness Audit'
+    : `Get My Grant Readiness Audit — ${(regularPriceCents / 100).toFixed(0)}`;
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+      {promoActive && !loading && (
+        <div className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white py-4 px-4 shadow-lg">
+          <div className="max-w-4xl mx-auto text-center">
+            <p className="text-lg sm:text-xl font-bold mb-2">
+              Limited-Time Launch Offer: Our $97 Grant Readiness Audit is FREE through January 31, 2027!
+            </p>
+            <div className="flex justify-center items-center gap-4 text-sm sm:text-base font-semibold">
+              <Clock className="w-5 h-5" />
+              <div className="flex gap-4">
+                <span>{bannerTime.days}d</span>
+                <span>{bannerTime.hours}h</span>
+                <span>{bannerTime.minutes}m</span>
+                <span>{bannerTime.seconds}s</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="max-w-4xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
         <div className="flex justify-end">
           <button
@@ -25,8 +48,16 @@ export default function Landing({ onStart, onAdminClick }: LandingProps) {
             Grant Readiness IQ
           </p>
           <h1 className="text-4xl sm:text-5xl font-bold text-slate-900 mb-4">
-            Is Your Organization Actually Ready to Win Grant Funding?
+            {promoActive && !loading
+              ? 'Get Grant Ready for 2027 — FREE!'
+              : 'Is Your Organization Actually Ready to Win Grant Funding?'}
           </h1>
+          {promoActive && !loading && (
+            <p className="text-lg text-slate-700 font-medium max-w-2xl mx-auto leading-relaxed mb-2">
+              Discover your organization's strengths, identify funding readiness gaps, and receive
+              actionable recommendations with our comprehensive Grant Readiness Audit.
+            </p>
+          )}
           <p className="text-lg text-slate-600 max-w-2xl mx-auto leading-relaxed mb-4">
             Before you spend weeks pursuing grants, discover whether your organization has the
             financial systems, documentation, programs, and capacity funders expect.
@@ -43,7 +74,7 @@ export default function Landing({ onStart, onAdminClick }: LandingProps) {
               onClick={onStart}
               className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-8 py-4 rounded-lg text-lg transition-colors duration-200 shadow-lg hover:shadow-xl"
             >
-              Start Your Free Assessment
+              {primaryCta}
             </button>
             <a
               href="#services"

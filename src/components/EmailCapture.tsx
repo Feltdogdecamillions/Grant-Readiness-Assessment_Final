@@ -1,14 +1,36 @@
 import { useState } from 'react';
-import { Mail, Loader2, User, Building2 } from 'lucide-react';
+import { Mail, Loader2, User, Building2, MapPin, HelpCircle, Building } from 'lucide-react';
 
 interface EmailCaptureProps {
-  onSubmit: (data: { name: string; organization: string; email: string }) => void;
+  onSubmit: (data: {
+    name: string;
+    organization: string;
+    email: string;
+    organizationType: string;
+    state: string;
+    primaryChallenge: string;
+    marketingConsent: boolean;
+  }) => void;
 }
+
+const ORGANIZATION_TYPES = [
+  'Nonprofit 501(c)(3)',
+  'Nonprofit (pending status)',
+  'Faith-based organization',
+  'School or educational program',
+  'For-profit business',
+  'Government agency',
+  'Other',
+];
 
 export default function EmailCapture({ onSubmit }: EmailCaptureProps) {
   const [name, setName] = useState('');
   const [organization, setOrganization] = useState('');
   const [email, setEmail] = useState('');
+  const [organizationType, setOrganizationType] = useState('');
+  const [state, setState] = useState('');
+  const [primaryChallenge, setPrimaryChallenge] = useState('');
+  const [marketingConsent, setMarketingConsent] = useState(false);
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -41,13 +63,31 @@ export default function EmailCapture({ onSubmit }: EmailCaptureProps) {
       return;
     }
 
+    if (!organizationType) {
+      setError('Please select your organization type');
+      return;
+    }
+
+    if (!state.trim()) {
+      setError('Please enter your state');
+      return;
+    }
+
     setIsSubmitting(true);
-    await onSubmit({ name: name.trim(), organization: organization.trim(), email: email.trim() });
+    await onSubmit({
+      name: name.trim(),
+      organization: organization.trim(),
+      email: email.trim(),
+      organizationType,
+      state: state.trim(),
+      primaryChallenge: primaryChallenge.trim(),
+      marketingConsent,
+    });
     setIsSubmitting(false);
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center px-4 py-8">
       <div className="max-w-md w-full">
         <div className="bg-white rounded-2xl shadow-xl p-8">
           <div className="text-center mb-8">
@@ -58,14 +98,14 @@ export default function EmailCapture({ onSubmit }: EmailCaptureProps) {
               Almost There!
             </h2>
             <p className="text-slate-600">
-              Enter your information to receive your personalized Grant Readiness Assessment results.
+              Enter your information to receive your personalized Grant Readiness Audit results.
             </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-slate-700 mb-2">
-                Your Name
+                Full Name
               </label>
               <div className="relative">
                 <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
@@ -92,7 +132,7 @@ export default function EmailCapture({ onSubmit }: EmailCaptureProps) {
                   id="organization"
                   value={organization}
                   onChange={(e) => setOrganization(e.target.value)}
-                  placeholder="Your Nonprofit Organization"
+                  placeholder="Your Organization"
                   className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-colors"
                   disabled={isSubmitting}
                 />
@@ -110,11 +150,86 @@ export default function EmailCapture({ onSubmit }: EmailCaptureProps) {
                   id="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="your@email.com"
+                  placeholder="you@example.org"
                   className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-colors"
                   disabled={isSubmitting}
                 />
               </div>
+            </div>
+
+            <div>
+              <label htmlFor="organizationType" className="block text-sm font-medium text-slate-700 mb-2">
+                Organization Type
+              </label>
+              <div className="relative">
+                <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
+                <select
+                  id="organizationType"
+                  value={organizationType}
+                  onChange={(e) => setOrganizationType(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-colors bg-white"
+                  disabled={isSubmitting}
+                >
+                  <option value="">Select organization type...</option>
+                  {ORGANIZATION_TYPES.map((type) => (
+                    <option key={type} value={type}>{type}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label htmlFor="state" className="block text-sm font-medium text-slate-700 mb-2">
+                State
+              </label>
+              <div className="relative">
+                <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
+                <input
+                  type="text"
+                  id="state"
+                  value={state}
+                  onChange={(e) => setState(e.target.value)}
+                  placeholder="e.g. Georgia"
+                  maxLength={50}
+                  className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-colors"
+                  disabled={isSubmitting}
+                />
+              </div>
+            </div>
+
+            <div>
+              <label htmlFor="primaryChallenge" className="block text-sm font-medium text-slate-700 mb-2">
+                Primary Grant Readiness Challenge{' '}
+                <span className="font-normal text-slate-400">(optional)</span>
+              </label>
+              <div className="relative">
+                <HelpCircle className="absolute left-3 top-3 w-5 h-5 text-slate-400" />
+                <textarea
+                  id="primaryChallenge"
+                  value={primaryChallenge}
+                  onChange={(e) => setPrimaryChallenge(e.target.value)}
+                  placeholder="e.g. We don't have organized financial records yet"
+                  rows={3}
+                  maxLength={500}
+                  className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-colors"
+                  disabled={isSubmitting}
+                />
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3 bg-slate-50 rounded-lg p-4">
+              <input
+                type="checkbox"
+                id="marketingConsent"
+                checked={marketingConsent}
+                onChange={(e) => setMarketingConsent(e.target.checked)}
+                className="mt-0.5 w-5 h-5 text-emerald-600 border-slate-300 rounded focus:ring-emerald-500 cursor-pointer"
+                disabled={isSubmitting}
+              />
+              <label htmlFor="marketingConsent" className="text-sm text-slate-600 cursor-pointer">
+                Send me Grant Readiness IQ newsletters, resources, and consulting offers.
+                Optional — you'll receive your results either way.
+              </label>
             </div>
 
             {error && (
@@ -137,7 +252,8 @@ export default function EmailCapture({ onSubmit }: EmailCaptureProps) {
             </button>
 
             <p className="text-xs text-slate-500 text-center">
-              We respect your privacy. Your email will only be used to send you your assessment results and helpful resources.
+              We respect your privacy. Your information will only be used to send you your
+              assessment results and, if you opt in, resources you've requested.
             </p>
           </form>
         </div>
