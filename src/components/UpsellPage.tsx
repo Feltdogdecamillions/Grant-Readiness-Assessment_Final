@@ -48,7 +48,7 @@ export default function UpsellPage({ onUpgrade, onContinue }: UpsellPageProps) {
                 <div className="flex items-center gap-2 mb-2">
                   <BookOpen className="w-5 h-5 text-blue-600" />
                   <h4 className="font-bold text-slate-900 text-lg">
-                    📘 Pre-Order: {bookPreOrder.name} (Releases {bookPreOrder.releaseDate})
+                    📘 Pre-Order: {bookPreOrder.name}
                   </h4>
                 </div>
                 <p className="text-slate-700 text-sm mb-3 leading-relaxed">
@@ -70,10 +70,10 @@ export default function UpsellPage({ onUpgrade, onContinue }: UpsellPageProps) {
                   )}
                 </div>
                 <p className="text-sm font-semibold text-blue-800 mb-1">
-                  Lock in early access before the official release on {bookPreOrder.releaseDate}.
+                  Lock in early access before the official release.
                 </p>
                 <p className="text-xs text-slate-600 italic">
-                  You will receive your digital copy (PDF) via email on {bookPreOrder.releaseDate}.
+                  You will receive your digital copy (PDF) via email when the book is released.
                 </p>
               </div>
             </label>
@@ -113,11 +113,8 @@ export default function UpsellPage({ onUpgrade, onContinue }: UpsellPageProps) {
                 </div>
 
                 <div className="bg-amber-50 border-2 border-amber-300 rounded-lg p-4 mb-4">
-                  <p className="text-sm font-bold text-amber-900 text-center mb-2">
-                    🎁 Your free 30-minute strategy session is included (limited to 10 spots per week).
-                  </p>
-                  <p className="text-xs text-amber-800 text-center">
-                    Must purchase before July 31, 2026
+                  <p className="text-sm font-bold text-amber-900 text-center">
+                    🎁 Your free 30-minute strategy session is included with this purchase.
                   </p>
                 </div>
 
