@@ -10,6 +10,12 @@ interface Assessment {
   score: number;
   created_at: string;
   responses: boolean[];
+  lead_details?: {
+    organization_type?: string;
+    state?: string;
+    primary_challenge?: string;
+  } | null;
+  marketing_consent?: boolean;
 }
 
 interface AdminDashboardProps {
@@ -136,13 +142,17 @@ export default function AdminDashboard({ onBack }: AdminDashboardProps) {
   };
 
   const downloadCSV = () => {
-    const headers = ['Name', 'Email', 'Organization', 'Score', 'Date'];
+    const headers = ['Name', 'Email', 'Organization', 'Organization Type', 'State', 'Primary Challenge', 'Marketing Consent', 'Score', 'Date'];
     const csvContent = [
       headers.join(','),
       ...assessments.map(a => [
         `"${a.name}"`,
         `"${a.email}"`,
         `"${a.organization}"`,
+        `"${a.lead_details?.organization_type || ''}"`,
+        `"${a.lead_details?.state || ''}"`,
+        `"${(a.lead_details?.primary_challenge || '').replace(/"/g, '""')}"`,
+        a.marketing_consent ? 'Yes' : 'No',
         a.score,
         new Date(a.created_at).toLocaleDateString()
       ].join(','))
@@ -332,6 +342,10 @@ export default function AdminDashboard({ onBack }: AdminDashboardProps) {
                     <th className="text-left py-3 px-4 font-semibold text-slate-700">Name</th>
                     <th className="text-left py-3 px-4 font-semibold text-slate-700">Email</th>
                     <th className="text-left py-3 px-4 font-semibold text-slate-700">Organization</th>
+                    <th className="text-left py-3 px-4 font-semibold text-slate-700">Type</th>
+                    <th className="text-left py-3 px-4 font-semibold text-slate-700">State</th>
+                    <th className="text-left py-3 px-4 font-semibold text-slate-700">Primary Challenge</th>
+                    <th className="text-left py-3 px-4 font-semibold text-slate-700">Marketing</th>
                     <th className="text-left py-3 px-4 font-semibold text-slate-700">Score</th>
                     <th className="text-left py-3 px-4 font-semibold text-slate-700">Date</th>
                   </tr>
@@ -345,6 +359,16 @@ export default function AdminDashboard({ onBack }: AdminDashboardProps) {
                       <td className="py-3 px-4 text-slate-900">{assessment.name}</td>
                       <td className="py-3 px-4 text-slate-700">{assessment.email}</td>
                       <td className="py-3 px-4 text-slate-700">{assessment.organization}</td>
+                      <td className="py-3 px-4 text-slate-700">{assessment.lead_details?.organization_type || '—'}</td>
+                      <td className="py-3 px-4 text-slate-700">{assessment.lead_details?.state || '—'}</td>
+                      <td className="py-3 px-4 text-slate-700 max-w-xs">{assessment.lead_details?.primary_challenge || '—'}</td>
+                      <td className="py-3 px-4">
+                        {assessment.marketing_consent ? (
+                          <span className="inline-block px-2 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">Opted in</span>
+                        ) : (
+                          <span className="inline-block px-2 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-600">No</span>
+                        )}
+                      </td>
                       <td className="py-3 px-4">
                         <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${
                           assessment.score >= 80 ? 'bg-green-100 text-green-800' :
